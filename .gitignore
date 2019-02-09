@@ -1,0 +1,5 @@
+ctest/
+.idea/
+Build/
+*.exe
+*_temp.go
