@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/printer"
@@ -40,6 +41,9 @@ func generate(gofile, cfile string) error {
 				dt.Methods = append(dt.Methods, genMethod{GoType: it.typeName, MethodName: m})
 			}
 		}
+	}
+	if len(dt.GoTypes) == 0 {
+		return errors.New("No types defines in interface")
 	}
 
 	content, err := genTempFile(dt)
