@@ -16,9 +16,9 @@ import (
 )
 
 func generate(gofile, cfile string) error {
-	tmpName := cfile + "_temp.go"
+	tmpName := ffSlash(cfile) + "_temp.go"
 	dt := &genData{
-		GoTargetFile: gofile, TargetFile: cfile, Header: header, PackageName: packageName, CRC: crc,
+		GoTargetFile: ffSlash(gofile), TargetFile: ffSlash(cfile), Header: header, PackageName: packageName, CRC: crc,
 	}
 	tmp := filepath.Base(gofile)
 	dt.ModuleName = tmp[0 : len(tmp)-8] // _impl.go removed
@@ -62,6 +62,10 @@ func generate(gofile, cfile string) error {
 		os.Remove(tmpName)
 	}
 	return nil
+}
+
+func ffSlash(path string) string {
+	return strings.Replace(path, "\\", "/", -1)
 }
 
 var stdAlias = []genAlias{
