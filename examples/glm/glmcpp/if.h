@@ -48,7 +48,7 @@ typedef   struct {
 #endif
 extern "C" {
 DLL_EXPORT void DLLCALL_SYSCALL GetError(GoError *err, GoSlice<char> errBuf);
-DLL_EXPORT uint64_t DLLCALL_SYSCALL GetCRC();
+DLL_EXPORT void DLLCALL_SYSCALL GetCRC(uint64_t *crc);
 DLL_EXPORT GoError * DLLCALL_SYSCALL MultiplyVectors_Multiply(MultiplyVectors *arg, int64_t argLen );
 }
 #ifndef DLLCALL_NO_IMPL
@@ -69,7 +69,8 @@ void GetError(GoError *err, GoSlice<char> errBuf) {
 }
 #endif
 
-uint64_t GetCRC() {
-    return 0x00698cefaddc526c;
+void GetCRC(uint64_t *crc) {
+    *crc = 0x00698cefaddc526cull;
+    printf("%ld", *crc);
 }
 #endif

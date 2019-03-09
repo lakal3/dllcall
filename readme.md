@@ -35,9 +35,9 @@ type dbIf struct{
 
 ## Generate interface
 When we invoke dllcall tool such as `dllcall dbif.go {otherdir}/dbif.h`, 
-dllcall will generate a dbif_impl.go file into the current directory and dbif.h to a specified location.
+dllcall will generate a dbif_impl_windows.go and dbif_impl_linux.go file into the current directory and dbif.h to a specified location.
 
-The file name of dbif_impl.go is derived from the original go file name. C++ -file can be freely named.
+The file name of dbif_impl_{os}.go is derived from the original go file name. C++ -file can be freely named.
 
 You can use `//go:generate` directive and `go generate` command to easily upgrade the interface whenever it changes.
 
@@ -51,7 +51,8 @@ After you have generated the interface, you can call it like any other go method
 
 ```go
 func main()  {
-	err := load_dbif("docdbdll.dll")
+	err := load_dbif("docdbdll.dll") 
+	// on Linux:  err := load_dbif(".\libdocdbdll.so") 
 	if err != nil { log.Fatal( err )}
 	d := &dbIf{ dbName: "test.db"}
 	err = d.Open()
@@ -61,7 +62,10 @@ func main()  {
 	if err != nil { log.Fatal( err )}
 }
 ```
-Generator will create an {interface}_impl.go file that contains all methods 
+
+**In Linux you must set environment variable GODEBUG=cgocheck=0**. See [why DLLCall](why.md) for details.
+
+Generator will create an {interface}_impl_{os}.go file that contains all methods 
 defined with #cmethod. 
 
 It will also contain load\_{interface} method that takes a single file path to shared library (dll).
@@ -87,14 +91,15 @@ or examples.
 This project is still in early stages, but has been successfully used to embed some
 notable C/C++ libraries including sqlite3, SDL2 and several Windows only COM+ programs.
 
-Currently only 64 bit (amd64) Windows is supported. 
+Currently only 64 bit (amd64) Windows and 64 bit Linux are supported. 
 
 Breaking changes are still possible but not very likely.
 
 ## TODO?
 - [ ] Sqlite example project using DLLCall
-- [ ] Linux support - See [why DLLCall](why.md) for actual challenges within this
-- [ ] Win32 support
+- [x] Linux support - Implemented but have some issues (see [Why DLL call](why.md))
+- [ ] 32 bit support 
+
 
 
 

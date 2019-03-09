@@ -21,7 +21,7 @@ func generate(gofile, cfile string) error {
 		GoTargetFile: ffSlash(gofile), TargetFile: ffSlash(cfile), Header: header, PackageName: packageName, CRC: crc,
 	}
 	tmp := filepath.Base(gofile)
-	dt.ModuleName = tmp[0 : len(tmp)-8] // _impl.go removed
+	dt.ModuleName = tmp[0 : len(tmp)-5] // _impl.go removed
 
 	dt.Aliases = make(map[string]genAlias)
 	for _, st := range stdAlias {
@@ -143,7 +143,7 @@ func genTempFile(dt *genData) (content []byte, err error) {
 	}
 	templ := template.New("gen")
 	templ.Funcs(genFuncs)
-	templ, err = templ.Parse(generatorCode)
+	templ, err = templ.Parse(generatorCode1 + loadWin + loadLinux + generatorCode2)
 	if err != nil {
 		return nil, err
 	}

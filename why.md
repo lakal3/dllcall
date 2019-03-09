@@ -52,18 +52,18 @@ Even newer CLANG compilers on Windows will consume and produce LIB files.
  It is possible to import dlopen/dlsym using CGO but this tends to ruin the original
  idea to support shared libraries without CGO. There is no pure go dlopen/dlsym implementation
  that I am aware of. See issue golang/go#18296 for more discussion about this.
- You can see hellolinux example on how to use the interface with CGO this way.
  
  In addition, if we invoke loaded APIs through CGO, it will detect that we
- have pointers to go heap and will panic. Generally it is advisable not to send a 
- pointer to Go-heap into C/C++ libraries as they are not aware of go's garbage collector.
- In this case the interface code is aware of calling the environment so passing go slices and strings should be ok. 
+ have pointers to go heap and will panic. **You can and must disable this check by setting environment variable GODEBUG=cgocheck=0** 
  
- If CGO could be used to load libraries we could still keep certain benefits such as:
+ Generally it is advisable not to send a pointer to Go-heap into C/C++ libraries as they are not aware of go's garbage collector.
+ In this case the interface code is aware of calling the environment so passing go slices and strings should be ok.
+ 
+ Even when CGO is used to load libraries we can keep certain benefits such as:
  - Ability to choose compiler (Clang) for shared library compilation
  - Faster compilation (we don't need to include actual project headers, only dllib)
+  
  
- But currently this would require similar assembler code that is used to make Windows DLL calls 
    
    
  

@@ -45,7 +45,7 @@ typedef   struct {
 #endif
 extern "C" {
 DLL_EXPORT void DLLCALL_SYSCALL GetError(GoError *err, GoSlice<char> errBuf);
-DLL_EXPORT uint64_t DLLCALL_SYSCALL GetCRC();
+DLL_EXPORT void DLLCALL_SYSCALL GetCRC(uint64_t *crc);
 DLL_EXPORT GoError * DLLCALL_SYSCALL greeting_Greet(greeting *arg, int64_t argLen );
 }
 #ifndef DLLCALL_NO_IMPL
@@ -66,7 +66,8 @@ void GetError(GoError *err, GoSlice<char> errBuf) {
 }
 #endif
 
-uint64_t GetCRC() {
-    return 0x00715e677960c0ae;
+void GetCRC(uint64_t *crc) {
+    *crc = 0x21e8f5462f9aeab2ull;
+    printf("%ld", *crc);
 }
 #endif

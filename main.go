@@ -24,7 +24,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Parse ", flag.Arg(0), " failed:", err)
 	}
-	gotarget := src[:len(src)-3] + "_impl.go"
+	gotarget := src[:len(src)-3] + "_impl"
 	err = generate(gotarget, flag.Arg(1))
 	if err != nil {
 		log.Fatal("Generate ", flag.Arg(1), " failed:", err)
@@ -33,7 +33,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Println("dllcall v0.5.2")
+	fmt.Println("dllcall v0.6.1")
 	fmt.Println("Usage: dllcall [flags] go_file cpp_file")
 	os.Exit(1)
 }

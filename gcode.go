@@ -1,18 +1,19 @@
 package main
 
-const generatorCode = `
+const generatorCode1 = `
 func main() {
+	__buildHFile()
+	__winLoader()
+	__linuxLoader()
+}
+
+func __buildHFile() {
 	f, err := os.Create("{{ .TargetFile }}")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer f.Close()
-	fgo, err := os.Create("{{ .GoTargetFile }}")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer fgo.Close()
-
+	
 	fmt.Fprintln(f, "{{ Quote .Header }}")
 	{{ range .CDecl }}
 	fmt.Fprintln(f, "{{ Quote .}}") 
@@ -33,7 +34,7 @@ func main() {
 	fmt.Fprintln(f, "#endif")
     fmt.Fprintln(f, "extern \"C\" {")
 	fmt.Fprintln(f, "DLL_EXPORT void DLLCALL_SYSCALL GetError(GoError *err, GoSlice<char> errBuf);")
-    fmt.Fprintln(f, "DLL_EXPORT uint64_t DLLCALL_SYSCALL GetCRC();")
+    fmt.Fprintln(f, "DLL_EXPORT void DLLCALL_SYSCALL GetCRC(uint64_t *crc);")
 	{{ range .Methods }}
 	fmt.Fprintln(f, "DLL_EXPORT GoError * DLLCALL_SYSCALL {{ .GoType}}_{{ .MethodName }}({{ .GoType}} *arg, int64_t argLen );")
 {{ end }}
@@ -58,12 +59,25 @@ func main() {
 	fmt.Fprintln(f, "}")
 	fmt.Fprintln(f, "#endif")
 	fmt.Fprintln(f, "")
-	fmt.Fprintln(f, "uint64_t GetCRC() {")
-	fmt.Fprintf(f, "    return {{ .CRC }};\n");
+	fmt.Fprintln(f, "void GetCRC(uint64_t *crc) {")
+	fmt.Fprintln(f, "    *crc = {{ .CRC }}ull;");
+	fmt.Fprintln(f, "    printf(\"%ld\", *crc);")
 	fmt.Fprintln(f, "}")
 	fmt.Fprintln(f, "#endif")
+}
+`
 
-	// Go part
+const loadWin = `
+func __winLoader() {
+	fgo, err := os.Create("{{ .GoTargetFile }}_windows.go")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer fgo.Close()
+	
+	fmt.Fprintln(fgo, "// +build windows")
+	fmt.Fprintln(fgo, "")
+	fmt.Fprintln(fgo, "//")
 	fmt.Fprintln(fgo, "package {{ .PackageName }}")
 	fmt.Fprintln(fgo, "// Generated file. Not not edit")
 	fmt.Fprintln(fgo, "")
@@ -99,8 +113,9 @@ func main() {
 	fmt.Fprintln(fgo, "	   if err != nil {")
 	fmt.Fprintln(fgo, "        return fmt.Errorf(\"GetCRC: %v\", err)")
 	fmt.Fprintln(fgo, "    }")
-	fmt.Fprintln(fgo, "    crc, _, _ := syscall.Syscall(getcrc,0,0,0,0)")
-    fmt.Fprintln(fgo, "    if uint64(crc) != {{ .CRC }} {")
+	fmt.Fprintln(fgo, "    var crc uint64")
+	fmt.Fprintln(fgo, "    syscall.Syscall(getcrc,1,uintptr(unsafe.Pointer(&crc)),0,0)")
+    fmt.Fprintln(fgo, "    if crc != {{ .CRC }} {")
     fmt.Fprintln(fgo, "        return fmt.Errorf(\"CRC mismatch %s != %x. DLL is not from same build than go code.\",\"{{ .CRC }}\", crc)")
     fmt.Fprintln(fgo, "    }")
 	fmt.Fprintln(fgo, "	   return nil")
@@ -124,6 +139,105 @@ func main() {
     fmt.Fprintln(fgo, "")
 {{ end }}
 }
+`
+
+const loadLinux = `
+func __linuxLoader() {
+	fgo, err := os.Create("{{ .GoTargetFile }}_linux.go")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer fgo.Close()
+	// Go part
+	fmt.Fprintln(fgo, "// +build linux")
+	fmt.Fprintln(fgo, "")
+	fmt.Fprintln(fgo, "//")
+	fmt.Fprintln(fgo, "package {{ .PackageName }}")
+	fmt.Fprintln(fgo, "// Generated file. Not not edit")
+	fmt.Fprintln(fgo, "")
+
+    fmt.Fprintln(fgo,"/*")
+	fmt.Fprintln(fgo,"#cgo LDFLAGS: -ldl")
+	fmt.Fprintln(fgo,"#include <dlfcn.h>")
+	fmt.Fprintln(fgo,"")
+	fmt.Fprintln(fgo,"void *invoke(void *addr, void *arg, long long size) {")
+    fmt.Fprintln(fgo,"void *(*ptr)(void *arg, long long size) = addr;")
+	fmt.Fprintln(fgo,"	return (*ptr)(arg, size);")
+	fmt.Fprintln(fgo,"}")
+
+	fmt.Fprintln(fgo,"void invokeGetError(void *addr, void *errPtr, void *msgSlice)  {")
+    fmt.Fprintln(fgo,"void (*ptr)(void * errPtr, void *msgSlice) = addr;")
+	fmt.Fprintln(fgo,"	(*ptr)(errPtr, msgSlice);")
+	fmt.Fprintln(fgo,"}")
+	fmt.Fprintln(fgo,"")
+	fmt.Fprintln(fgo,"void invokeCrc(void *addr, void *crc)  {")
+	fmt.Fprintln(fgo,"	unsigned long long (*ptr)(void *crc) = addr;")
+	fmt.Fprintln(fgo,"	(*ptr)(crc);")
+	fmt.Fprintln(fgo,"}")
+	fmt.Fprintln(fgo,"*/")
+	fmt.Fprintln(fgo,"import \"C\"")
+
+	fmt.Fprintln(fgo,"import \"unsafe\"")
+	fmt.Fprintln(fgo,"import \"errors\"")
+	fmt.Fprintln(fgo,"import \"fmt\"")
+
+	fmt.Fprintln(fgo, "")
+	fmt.Fprintln(fgo, "var (")
+	fmt.Fprintln(fgo, "    _{{ $.ModuleName }}_gate__getError unsafe.Pointer")
+{{ range .Methods }}
+	fmt.Fprintln(fgo, "    _{{ $.ModuleName }}_gate_{{ .GoType}}_{{ .MethodName }} unsafe.Pointer")
+{{ end }}
+	fmt.Fprintln(fgo, ")")
+	fmt.Fprintln(fgo, "")
+	fmt.Fprintln(fgo, "func load_{{ .ModuleName }}(dllPath string)(err error) {")
+	fmt.Fprintln(fgo, "    handle := C.dlopen(C.CString(dllPath), C.RTLD_NOW)")
+	fmt.Fprintln(fgo, "    if uintptr(handle) == 0 {")
+	fmt.Fprintln(fgo, "        return fmt.Errorf(\"Load %s failed\", dllPath)")
+	fmt.Fprintln(fgo, "    }")
+	fmt.Fprintln(fgo, "	   _{{ $.ModuleName }}_gate__getError = C.dlsym(handle, C.CString(\"GetError\"))")
+	fmt.Fprintln(fgo, "    if uintptr(_helloif_gate__getError) == 0 {")
+	fmt.Fprintln(fgo, "        return fmt.Errorf(\"Failed to load function: %s\", \"GetError\")")
+	fmt.Fprintln(fgo, "    }")
+{{ range .Methods }}
+	fmt.Fprintln(fgo, "     _{{ $.ModuleName }}_gate_{{ .GoType}}_{{ .MethodName }} = C.dlsym(handle, C.CString(\"{{ .GoType}}_{{ .MethodName }}\"))")
+	fmt.Fprintln(fgo, "	   if uintptr(_{{ $.ModuleName }}_gate_{{ .GoType}}_{{ .MethodName }}) == 0 {")
+	fmt.Fprintln(fgo, "        return fmt.Errorf(\"Failed to load: %s\", \"{{ .GoType}}_{{ .MethodName }}\")")
+	fmt.Fprintln(fgo, "    }")
+{{ end }}
+    fmt.Fprintln(fgo, "")
+    fmt.Fprintln(fgo, "    getcrc := C.dlsym(handle, C.CString(\"GetCRC\"))")
+    fmt.Fprintln(fgo, "    if uintptr(getcrc) == 0 {")
+    fmt.Fprintln(fgo, "        return fmt.Errorf(\"GetCRC: %v\", err)")
+    fmt.Fprintln(fgo, "    }")
+	fmt.Fprintln(fgo, "    var crc uint64")
+    fmt.Fprintln(fgo, "    C.invokeCrc(getcrc, unsafe.Pointer(&crc))")
+    fmt.Fprintln(fgo, "    if crc != {{ .CRC }} {")
+    fmt.Fprintln(fgo, "        return fmt.Errorf(\"CRC mismatch %s != %x. DLL is not from same build than go code.\",\"{{ .CRC }}\", crc)")
+    fmt.Fprintln(fgo, "    }")
+	fmt.Fprintln(fgo, "	   return nil")
+	fmt.Fprintln(fgo, "}")
+	fmt.Fprintln(fgo, "")
+	fmt.Fprintln(fgo, "func getError_{{ $.ModuleName }}(errPtr unsafe.Pointer)(error) {")
+	fmt.Fprintln(fgo, "    errText := make([]byte, 0, 512)")
+    fmt.Fprintln(fgo, "    C.invokeGetError(_{{ $.ModuleName }}_gate__getError, unsafe.Pointer(&errText), errPtr)")
+	fmt.Fprintln(fgo, "    return errors.New(string(errText))")
+	fmt.Fprintln(fgo, "}")
+	fmt.Fprintln(fgo, "")
+{{ range .Methods }}
+	fmt.Fprintln(fgo, "func (r *{{ .GoType}}) {{ .MethodName }}() (err error) {")
+    fmt.Fprintln(fgo, "    errPtr := C.invoke(_{{ $.ModuleName }}_gate_{{ .GoType}}_{{ .MethodName }}, unsafe.Pointer(r),") 
+    fmt.Fprintln(fgo, "      ", reflect.TypeOf(new({{ .GoType}})).Elem().Size(), ")")
+    fmt.Fprintln(fgo, "    if uintptr(errPtr) != 0 {")
+    fmt.Fprintln(fgo, "         return getError_helloif(errPtr)")
+    fmt.Fprintln(fgo, "    }")
+    fmt.Fprintln(fgo, "    return nil")
+	fmt.Fprintln(fgo, "}")
+    fmt.Fprintln(fgo, "")
+{{ end }}
+}
+`
+
+const generatorCode2 = `
 
 func _gen_CType(typeName string, t reflect.Type) string {
 	if t.Kind() == reflect.Ptr {

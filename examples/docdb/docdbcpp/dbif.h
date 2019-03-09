@@ -67,7 +67,7 @@ typedef   struct {
 #endif
 extern "C" {
 DLL_EXPORT void DLLCALL_SYSCALL GetError(GoError *err, GoSlice<char> errBuf);
-DLL_EXPORT uint64_t DLLCALL_SYSCALL GetCRC();
+DLL_EXPORT void DLLCALL_SYSCALL GetCRC(uint64_t *crc);
 DLL_EXPORT GoError * DLLCALL_SYSCALL dbIf_Open(dbIf *arg, int64_t argLen );
 DLL_EXPORT GoError * DLLCALL_SYSCALL dbIf_Close(dbIf *arg, int64_t argLen );
 DLL_EXPORT GoError * DLLCALL_SYSCALL dbBatch_Do(dbBatch *arg, int64_t argLen );
@@ -102,7 +102,8 @@ void GetError(GoError *err, GoSlice<char> errBuf) {
 }
 #endif
 
-uint64_t GetCRC() {
-    return 0x98b5330a8380a2f0;
+void GetCRC(uint64_t *crc) {
+    *crc = 0x98b5330a8380a2f0ull;
+    printf("%ld", *crc);
 }
 #endif

@@ -1,3 +1,6 @@
+// +build windows
+
+//
 package main
 
 // Generated file. Not not edit
@@ -40,8 +43,9 @@ func load_dbif(dllPath string) (err error) {
 	if err != nil {
 		return fmt.Errorf("GetCRC: %v", err)
 	}
-	crc, _, _ := syscall.Syscall(getcrc, 0, 0, 0, 0)
-	if uint64(crc) != 0x98b5330a8380a2f0 {
+	var crc uint64
+	syscall.Syscall(getcrc, 1, uintptr(unsafe.Pointer(&crc)), 0, 0)
+	if crc != 0x98b5330a8380a2f0 {
 		return fmt.Errorf("CRC mismatch %s != %x. DLL is not from same build than go code.", "0x98b5330a8380a2f0", crc)
 	}
 	return nil
