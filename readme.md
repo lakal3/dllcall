@@ -65,7 +65,7 @@ func main()  {
 
 **In Linux you must set environment variable GODEBUG=cgocheck=0**. See [why DLLCall](why.md) for details.
 
-Generator will create an {interface}_impl_{os}.go file that contains all methods 
+Generator will create an {interface}\_impl\_{os}.go file that contains all methods 
 defined with #cmethod. 
 
 It will also contain load\_{interface} method that takes a single file path to shared library (dll).
