@@ -71,6 +71,5 @@ void GetError(GoError *err, GoSlice<char> errBuf) {
 
 void GetCRC(uint64_t *crc) {
     *crc = 0x00698cefaddc526cull;
-    printf("%ld", *crc);
 }
 #endif

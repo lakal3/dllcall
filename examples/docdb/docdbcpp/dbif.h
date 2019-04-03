@@ -104,6 +104,5 @@ void GetError(GoError *err, GoSlice<char> errBuf) {
 
 void GetCRC(uint64_t *crc) {
     *crc = 0x98b5330a8380a2f0ull;
-    printf("%ld", *crc);
 }
 #endif

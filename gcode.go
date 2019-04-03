@@ -61,7 +61,6 @@ func __buildHFile() {
 	fmt.Fprintln(f, "")
 	fmt.Fprintln(f, "void GetCRC(uint64_t *crc) {")
 	fmt.Fprintln(f, "    *crc = {{ .CRC }}ull;");
-	fmt.Fprintln(f, "    printf(\"%ld\", *crc);")
 	fmt.Fprintln(f, "}")
 	fmt.Fprintln(f, "#endif")
 }
