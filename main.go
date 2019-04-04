@@ -33,7 +33,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Println("dllcall v0.6.2")
+	fmt.Println("dllcall v0.6.3")
 	fmt.Println("Usage: dllcall [flags] go_file cpp_file")
 	os.Exit(1)
 }

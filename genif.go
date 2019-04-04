@@ -137,6 +137,7 @@ func genTempFile(dt *genData) (content []byte, err error) {
 	addImport("os")
 	addImport("reflect")
 	addImport("strings")
+	removeComments()
 	err = printer.Fprint(bf, fset, fast)
 	if err != nil {
 		return nil, err
@@ -166,6 +167,11 @@ func addImport(path string) {
 			Path: &ast.BasicLit{Value: "\"" + path + "\"", Kind: token.STRING},
 		}}}
 	fast.Decls = append([]ast.Decl{imp}, fast.Decls...)
+}
+
+func removeComments() {
+	fast.Doc = nil
+	fast.Comments = []*ast.CommentGroup{}
 }
 
 func invokeGen(genFile string) error {

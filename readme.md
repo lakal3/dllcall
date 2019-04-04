@@ -99,6 +99,8 @@ Breaking changes are still possible but not very likely.
 - [ ] Sqlite example project using DLLCall
 - [x] Linux support - Implemented but have some issues (see [Why DLL call](why.md))
 - [ ] 32 bit support 
+- [ ] Better support for types imported from other modules
+
 
 
 

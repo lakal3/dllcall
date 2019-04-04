@@ -241,7 +241,7 @@ const generatorCode2 = `
 func _gen_CType(typeName string, t reflect.Type) string {
 	if t.Kind() == reflect.Ptr {
 		tn := _gen_CType("", t.Elem())
-		return "(" + tn + "*) " + typeName
+		return  tn + "* " + typeName
 	}
 	if t.Kind() == reflect.Slice {
 		tn := _gen_CType("", t.Elem())
@@ -260,7 +260,9 @@ func _gen_CType(typeName string, t reflect.Type) string {
 
 	if t.Kind() == reflect.Struct {
 		sb := &strings.Builder{}
-		sb.WriteString(" struct {\n")
+		sb.WriteString(" struct ")
+	    sb.WriteString(typeName)
+		sb.WriteString(" {\n")
 		for idx := 0; idx < t.NumField(); idx++ {
 			f := t.Field(idx)
 			tn := _gen_CType(f.Name, f.Type)
@@ -278,6 +280,38 @@ func _gen_CType(typeName string, t reflect.Type) string {
 		_gen_alias[t.Name()] = t.Name()
 		return sb.String()
 	}
+	if t.Kind() == reflect.Int64 {
+		return "int64_t " + typeName
+	}
+	if t.Kind() == reflect.Uint64 {
+		return "uint64_t " + typeName
+	}
+	if t.Kind() == reflect.Int32 {
+		return "int32_t " + typeName
+	}
+	if t.Kind() == reflect.Uint32 {
+		return "uint32_t " + typeName
+	}
+	if t.Kind() == reflect.Int16 {
+		return "int16_t " + typeName
+	}
+	if t.Kind() == reflect.Uint16 {
+		return "uint16_t " + typeName
+	}
+	if t.Kind() == reflect.Int8 {
+		return "int8_t " + typeName
+	}
+	if t.Kind() == reflect.Uint8 {
+		return "uint8_t " + typeName
+	}
+	if t.Kind() == reflect.Float64 {
+		return "double " + typeName
+	}
+	if t.Kind() == reflect.Float32 {
+		return "float " + typeName
+	}
+
+	log.Fatal("Unsupported type ", t.Kind())
 	return t.Name()
 }
 
