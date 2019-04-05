@@ -30,7 +30,7 @@ struct GoError {
 #endif
 
 
-typedef   struct {
+typedef   struct greeting {
     GoString greeting;
     GoError *Greet();
 } greeting ;

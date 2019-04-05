@@ -31,15 +31,16 @@ func generate(gofile, cfile string) error {
 		if len(it.cdecl) > 0 {
 			dt.CDecl = append(dt.CDecl, it.cdecl)
 		}
+		for _, imp := range it.imports {
+			dt.GoTypes = append(dt.GoTypes, imp)
+		}
 		if len(it.ctype) > 0 {
 			dt.Aliases[it.typeName] = genAlias{GoType: it.typeName, CAlias: it.ctype}
 		} else {
 			dt.GoTypes = append(dt.GoTypes, it.typeName)
 		}
-		if len(it.methods) > 0 {
-			for _, m := range it.methods {
-				dt.Methods = append(dt.Methods, genMethod{GoType: it.typeName, MethodName: m})
-			}
+		for _, m := range it.methods {
+			dt.Methods = append(dt.Methods, genMethod{GoType: it.typeName, MethodName: m})
 		}
 	}
 	if len(dt.GoTypes) == 0 {
@@ -126,6 +127,13 @@ var genFuncs = template.FuncMap{
 			}
 		}
 		return sb.String()
+	},
+	"NoModule": func(str string) string {
+		idx := strings.IndexRune(str, '.')
+		if idx >= 0 {
+			return str[idx+1:]
+		}
+		return str
 	},
 }
 

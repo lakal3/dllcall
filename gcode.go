@@ -20,7 +20,7 @@ func __buildHFile() {
 {{ end }}
 	var s string
 	{{ range .GoTypes }}
-	s = _gen_CType("{{ . }}", reflect.TypeOf(new({{.}})).Elem())
+	s = _gen_CType("{{ NoModule . }}", reflect.TypeOf(new({{.}})).Elem())
 	fmt.Fprintln(f, "typedef ", s, ";");
 {{ end }}
 	fmt.Fprintln(f, "#ifndef DLL_EXPORT")

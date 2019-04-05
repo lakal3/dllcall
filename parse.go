@@ -18,6 +18,7 @@ type typeInfo struct {
 	typeName string
 	comment  string
 	methods  []string
+	imports  []string
 	ctype    string
 	cdecl    string
 }
@@ -118,8 +119,9 @@ func (info *typeInfo) parseComment() error {
 	for _, line := range strings.Split(info.comment, "\n") {
 		idx1 := strings.Index(line, "#cmethod")
 		idx2 := strings.Index(line, "#ctype")
-		idx3 := strings.Index(line, "#c")
-		if idx3 >= 0 && idx1 < 0 && idx2 < 0 {
+		idx3 := strings.Index(line, "#cimport")
+		idx4 := strings.Index(line, "#c")
+		if idx4 >= 0 && idx1 < 0 && idx2 < 0 && idx3 < 0 {
 			return fmt.Errorf("Invalid #c directive at line: %s", line)
 		}
 		if sb != nil {
@@ -143,6 +145,9 @@ func (info *typeInfo) parseComment() error {
 		if idx2 >= 0 {
 			info.ctype = strings.Trim(line[idx2+6:], " \t")
 			sb = &strings.Builder{}
+		}
+		if idx3 >= 0 {
+			info.imports = append(info.imports, strings.Trim(line[idx3+8:], " \t"))
 		}
 	}
 	if sb != nil {
