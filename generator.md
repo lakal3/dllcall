@@ -72,10 +72,9 @@ Currently generator supports following types that have well defined counterparts
 - Any size of int and uint types (uint8, int8, uint16, int16, ...). 
 They will be mapped to C++ equivalents (uint8_t, int8_t, ...)
 - float32 and float64
-- String. String is mapped to GoString and must be treated as **readonly**. 
-Writing to a string will most likely cause the program to crash.
+- String. String is mapped to GoString (see Go types) 
 - a pointer to supported types
-- a slice of supported types
+- a slice of supported types (see Go types)
 - an array of supported types
 - Structures containing supported types
 
@@ -116,4 +115,20 @@ typedef   struct {
 
 For actual implementation we have to create method bodies for Open- and Close-methods.
 
+ 
+## Go types
+
+Generated C++ header file will include default implementations of certain Go types that
+matches Go memory layout:
+- GoString - Matches Go's string definition. **GoString are always utf-8, readonly and they don't have terminating 0 character.**
+Use append method to copy Go's string to std::string before you manipulate it.
+
+- GoSlice<T> - Go slice of type. You can safely change length and content within capacity boudaries.
+
+- GoError - Support to return error values back to Go code. Each generated function
+   will return a GoError struct on nullptr to indicate that there was no error. Go interface will call
+   GoError::GetError to retrieve actual error message into byte slice.
+
+You can override default implementation by defining your own type and declaring DLLCALL_CUSTOM_GO_XXX. 
+See generated interface file for more details.
  

@@ -6,6 +6,8 @@
 #include <string>
 #include <cstring>
 
+#ifndef DLLCALL_CUSTOM_GO_SLICE
+#define DLLCALL_CUSTOM_GO_SLICE
 template<class T> 
 struct GoSlice
 {
@@ -13,19 +15,33 @@ struct GoSlice
     uint64_t len;
     uint64_t cap;
 };
+#endif
 
+#ifndef DLLCALL_CUSTOM_GO_STRING
+#define DLLCALL_CUSTOM_GO_STRING
 struct GoString
 {
     const char *data;
     uint64_t len;
     void append(std::string &str) { str.append(data, len); }
 };
+#endif
 
 #ifndef DLLCALL_CUSTOM_GO_ERROR
+#define DLLCALL_CUSTOM_GO_ERROR
 struct GoError {
     std::string error;
-    GoError(const char *err): error(err) {}
+    GoError(const char *err): error(err) {
+    }
     const char *GetError() { return error.c_str(); }
+    static void GetError(GoError *err, GoSlice<char> errBuf) {
+        size_t len = strlen(err->GetError());
+        if (len >= errBuf.cap) { len = errBuf.cap - 1; }
+        strncpy(errBuf.data, err->GetError(), len);
+        errBuf.len = len;
+        delete err;
+    }
+
 };
 #endif
 
@@ -41,18 +57,18 @@ enum operKind: int32_t {
 
 
 
-typedef   struct {
+typedef   struct dbIf {
     Stmt * handle;
     GoString dbName;
     GoError *Open();
     GoError *Close();
 } dbIf ;
-typedef   struct {
+typedef   struct dbOper {
     operKind kind;
     GoString key;
     GoSlice<uint8_t > value;
 } dbOper ;
-typedef   struct {
+typedef   struct dbBatch {
     GoSlice<dbOper > operations;
     GoError *Do();
 } dbBatch ;
@@ -92,15 +108,10 @@ GoError *dbBatch_Do(dbBatch *arg, int64_t argLen ) {
     err = arg->Do();
     return err;
 }
-#ifndef DLLCALL_CUSTOM_GO_ERROR
+
 void GetError(GoError *err, GoSlice<char> errBuf) {
-    size_t len = strlen(err->GetError());
-    if (len >= errBuf.cap) { len = errBuf.cap - 1; }
-	 strncpy(errBuf.data, err->GetError(), len);
-    errBuf.len = len;
-    delete err;
+	return GoError::GetError(err, errBuf);
 }
-#endif
 
 void GetCRC(uint64_t *crc) {
     *crc = 0x98b5330a8380a2f0ull;

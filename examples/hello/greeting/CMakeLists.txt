@@ -5,6 +5,6 @@ if(NOT CMAKE_DEBUG_POSTFIX)
   set(CMAKE_DEBUG_POSTFIX d)
 endif()
 
-add_library(greeting SHARED "greeting.cpp" "helloif.h")
+add_library(greeting SHARED "greeting.cpp" "greeting.h")
 
 install(TARGETS greeting DESTINATION bin)
