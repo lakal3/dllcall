@@ -351,14 +351,13 @@ struct GoError {
 	std::string error;
 	GoError(const char *err): error(err) {
 	}
-	const char *GetError() { return error.c_str(); }
-	static void GetError(GoError *err, GoSlice<char> errBuf) {
-		size_t len = strlen(err->GetError());
-		if (len >= errBuf.cap) { len = errBuf.cap - 1; }
-		strncpy(errBuf.data, err->GetError(), len);
-		errBuf.len = len;
-		delete err;
-	}
+	static void GetError(GoError *err, GoSlice<char> &errBuf) {
+        size_t len = err->error.size();
+        if (len >= errBuf.cap) { len = errBuf.cap - 1; }
+        strncpy(errBuf.data, &(err->error.at(0)), len);
+        errBuf.len = len;
+        delete err;
+    }
 
 };
 #endif
