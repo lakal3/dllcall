@@ -49,15 +49,10 @@ func __buildHFile() {
 	fmt.Fprintln(f, "    return err;")
 	fmt.Fprintln(f, "}")
 {{ end }}
-    fmt.Fprintln(f, "#ifndef DLLCALL_CUSTOM_GO_ERROR")
+	fmt.Fprintln(f, "")
 	fmt.Fprintln(f, "void GetError(GoError *err, GoSlice<char> errBuf) {")
-	fmt.Fprintln(f, "    size_t len = strlen(err->GetError());");
-	fmt.Fprintln(f, "    if (len >= errBuf.cap) { len = errBuf.cap - 1; }")
-	fmt.Fprintln(f, "	 strncpy(errBuf.data, err->GetError(), len);")
-	fmt.Fprintln(f, "    errBuf.len = len;")
-	fmt.Fprintln(f, "    delete err;")
+	fmt.Fprintln(f, "	return GoError::GetError(err, errBuf);")
 	fmt.Fprintln(f, "}")
-	fmt.Fprintln(f, "#endif")
 	fmt.Fprintln(f, "")
 	fmt.Fprintln(f, "void GetCRC(uint64_t *crc) {")
 	fmt.Fprintln(f, "    *crc = {{ .CRC }}ull;");
@@ -259,6 +254,7 @@ func _gen_CType(typeName string, t reflect.Type) string {
 	}
 
 	if t.Kind() == reflect.Struct {
+		_gen_alias[t.Name()] = t.Name() // Prevent recursive parsing of struct
 		sb := &strings.Builder{}
 		sb.WriteString(" struct ")
 	    sb.WriteString(typeName)
@@ -277,7 +273,6 @@ func _gen_CType(typeName string, t reflect.Type) string {
 		sb.WriteString("}")
 		sb.WriteString(" ")
 		sb.WriteString(typeName)
-		_gen_alias[t.Name()] = t.Name()
 		return sb.String()
 	}
 	if t.Kind() == reflect.Int64 {
@@ -329,6 +324,8 @@ const header = `
 #include <string>
 #include <cstring>
 
+#ifndef DLLCALL_CUSTOM_GO_SLICE
+#define DLLCALL_CUSTOM_GO_SLICE
 template<class T> 
 struct GoSlice
 {
@@ -336,19 +333,33 @@ struct GoSlice
 	uint64_t len;
 	uint64_t cap;
 };
+#endif
 
+#ifndef DLLCALL_CUSTOM_GO_STRING
+#define DLLCALL_CUSTOM_GO_STRING
 struct GoString
 {
 	const char *data;
 	uint64_t len;
 	void append(std::string &str) { str.append(data, len); }
 };
+#endif
 
 #ifndef DLLCALL_CUSTOM_GO_ERROR
+#define DLLCALL_CUSTOM_GO_ERROR
 struct GoError {
 	std::string error;
-	GoError(const char *err): error(err) {}
+	GoError(const char *err): error(err) {
+	}
 	const char *GetError() { return error.c_str(); }
+	static void GetError(GoError *err, GoSlice<char> errBuf) {
+		size_t len = strlen(err->GetError());
+		if (len >= errBuf.cap) { len = errBuf.cap - 1; }
+		strncpy(errBuf.data, err->GetError(), len);
+		errBuf.len = len;
+		delete err;
+	}
+
 };
 #endif
 
