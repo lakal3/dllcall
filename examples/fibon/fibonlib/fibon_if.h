@@ -45,10 +45,12 @@ struct GoError {
 #endif
 
 
-typedef   struct greeting {
-    GoString greeting;
-    GoError *Greet();
-} greeting ;
+typedef   struct calcFibonacci {
+    int64_t n;
+    int64_t result;
+    GoError *calc();
+    GoError *fastCalc();
+} calcFibonacci ;
 #ifndef DLL_EXPORT
 #ifdef _WIN32
 #define DLL_EXPORT  __declspec(dllexport) 
@@ -61,14 +63,21 @@ typedef   struct greeting {
 extern "C" {
 DLL_EXPORT void DLLCALL_SYSCALL GetError(GoError *err, GoSlice<char> *errBuf);
 DLL_EXPORT void DLLCALL_SYSCALL GetCRC(uint64_t *crc);
-DLL_EXPORT GoError * DLLCALL_SYSCALL greeting_Greet(greeting *arg, int64_t argLen );
+DLL_EXPORT GoError * DLLCALL_SYSCALL calcFibonacci_calc(calcFibonacci *arg, int64_t argLen );
+DLL_EXPORT GoError * DLLCALL_SYSCALL calcFibonacci_fastCalc(calcFibonacci *arg, int64_t argLen );
 }
 #ifndef DLLCALL_NO_IMPL
 const char *_callError = "Argument length check failed. Recompile interface and check compiler alignments";
-GoError *greeting_Greet(greeting *arg, int64_t argLen ) {
-    if (sizeof(greeting) != argLen) { return new GoError(_callError); }
+GoError *calcFibonacci_calc(calcFibonacci *arg, int64_t argLen ) {
+    if (sizeof(calcFibonacci) != argLen) { return new GoError(_callError); }
     GoError *err;
-    err = arg->Greet();
+    err = arg->calc();
+    return err;
+}
+GoError *calcFibonacci_fastCalc(calcFibonacci *arg, int64_t argLen ) {
+    if (sizeof(calcFibonacci) != argLen) { return new GoError(_callError); }
+    GoError *err;
+    err = arg->fastCalc();
     return err;
 }
 
@@ -77,6 +86,6 @@ void GetError(GoError *err, GoSlice<char> *errBuf) {
 }
 
 void GetCRC(uint64_t *crc) {
-    *crc = 0x21e8f5462f9aeab2ull;
+    *crc = 0x6fa8d99117bcd3a4ull;
 }
 #endif

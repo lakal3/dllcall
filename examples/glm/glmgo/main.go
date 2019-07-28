@@ -1,6 +1,6 @@
 // Example to use GLM C++ library to calculate matrix transformation
 
-//go:generate dllcall if.go ../glmcpp/if.h
+//go:generate dllcall -fast if.go ../glmcpp/if.h
 package main
 
 import (
@@ -11,6 +11,7 @@ import (
 
 func main() {
 	debug := flag.Bool("debug", false, "Debug DLL")
+	fast := flag.Bool("fast", false, "Debug DLL")
 	flag.Parse()
 	var err error
 	if *debug {
@@ -28,7 +29,11 @@ func main() {
 	for idx := 0; idx < 100; idx++ {
 		mv.Vectors = append(mv.Vectors, Vector{float64(idx), float64(idx * 2), float64(idx * 3)})
 	}
-	err = mv.Multiply()
+	if *fast {
+		err = mv.FastMultiply()
+	} else {
+		err = mv.Multiply()
+	}
 	if err != nil {
 		log.Fatal(err)
 	}

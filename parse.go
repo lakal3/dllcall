@@ -15,12 +15,13 @@ var fset *token.FileSet
 var fast *ast.File
 
 type typeInfo struct {
-	typeName string
-	comment  string
-	methods  []string
-	imports  []string
-	ctype    string
-	cdecl    string
+	typeName    string
+	comment     string
+	methods     []string
+	safeMethods []string
+	// imports  []string
+	ctype string
+	cdecl string
 }
 
 var typeMap = make(map[string]*typeInfo)
@@ -113,22 +114,29 @@ func addComments(current string, group *ast.CommentGroup) string {
 	return sb.String()
 }
 
+var methods = []string{"#cmethod", "#csafe_method", "#ctype", "#c"}
+
 func (info *typeInfo) parseComment() error {
 	var sb *strings.Builder
 
 	for _, line := range strings.Split(info.comment, "\n") {
-		idx1 := strings.Index(line, "#cmethod")
-		idx2 := strings.Index(line, "#ctype")
-		idx3 := strings.Index(line, "#cimport")
-		idx4 := strings.Index(line, "#c")
-		if idx4 >= 0 && idx1 < 0 && idx2 < 0 && idx3 < 0 {
+		idx := 0
+		pos := -1
+		for ; idx < len(methods); idx++ {
+			pos = strings.Index(line, methods[idx])
+			if pos >= 0 {
+				break
+			}
+		}
+
+		if idx == 3 {
 			return fmt.Errorf("Invalid #c directive at line: %s", line)
 		}
 		if sb != nil {
-			if idx1 >= 0 || idx2 >= 0 {
+			if pos >= 0 {
 				return errors.New("#ctype or #cmethod inside #ctype declaration")
 			}
-			idx1 = strings.Index(line, "*/")
+			idx1 := strings.Index(line, "*/")
 			if idx1 < 0 {
 				idx1 = len(line)
 			}
@@ -136,19 +144,23 @@ func (info *typeInfo) parseComment() error {
 			sb.WriteRune('\n')
 			continue
 		}
-		if idx1 >= 0 {
-			for _, m := range strings.Split(line[idx1+8:], ",") {
+		if idx == 0 { // #cmethod
+			for _, m := range strings.Split(line[pos+8:], ",") {
 				info.methods = append(info.methods, strings.Trim(m, " \t"))
 			}
 			continue
 		}
-		if idx2 >= 0 {
-			info.ctype = strings.Trim(line[idx2+6:], " \t")
+		if idx == 1 { // #csafe_method
+			for _, m := range strings.Split(line[pos+13:], ",") {
+				info.safeMethods = append(info.safeMethods, strings.Trim(m, " \t"))
+			}
+			continue
+		}
+		if idx == 2 { // #ctype
+			info.ctype = strings.Trim(line[pos+6:], " \t")
 			sb = &strings.Builder{}
 		}
-		if idx3 >= 0 {
-			info.imports = append(info.imports, strings.Trim(line[idx3+8:], " \t"))
-		}
+
 	}
 	if sb != nil {
 		info.cdecl = sb.String()

@@ -8,6 +8,7 @@ type Matrix4x4 [16]float64
 
 /*
 #cmethod Multiply
+#csafe_method FastMultiply
 */
 type MultiplyVectors struct {
 	Mat     Matrix4x4

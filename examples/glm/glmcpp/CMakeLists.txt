@@ -14,6 +14,6 @@ endif()
 
 include_directories(${GLM_INCLUDE_DIR})
 
-add_library(glmcpp SHARED "ifimpl.cpp")
+add_library(glmcpp SHARED "ifimpl.cpp" "if.h")
 
 install(TARGETS glmcpp DESTINATION bin)

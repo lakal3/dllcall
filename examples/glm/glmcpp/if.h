@@ -33,11 +33,10 @@ struct GoError {
     std::string error;
     GoError(const char *err): error(err) {
     }
-    const char *GetError() { return error.c_str(); }
-    static void GetError(GoError *err, GoSlice<char> errBuf) {
-        size_t len = strlen(err->GetError());
+    static void GetError(GoError *err, GoSlice<char> &errBuf) {
+        size_t len = err->error.size();
         if (len >= errBuf.cap) { len = errBuf.cap - 1; }
-        strncpy(errBuf.data, err->GetError(), len);
+        strncpy(errBuf.data, &(err->error.at(0)), len);
         errBuf.len = len;
         delete err;
     }
@@ -52,6 +51,7 @@ typedef   struct MultiplyVectors {
     Matrix4x4 Mat;
     GoSlice<Vector > Vectors;
     GoError *Multiply();
+    GoError *FastMultiply();
 } MultiplyVectors ;
 #ifndef DLL_EXPORT
 #ifdef _WIN32
@@ -63,9 +63,10 @@ typedef   struct MultiplyVectors {
 #endif
 #endif
 extern "C" {
-DLL_EXPORT void DLLCALL_SYSCALL GetError(GoError *err, GoSlice<char> errBuf);
+DLL_EXPORT void DLLCALL_SYSCALL GetError(GoError *err, GoSlice<char> *errBuf);
 DLL_EXPORT void DLLCALL_SYSCALL GetCRC(uint64_t *crc);
 DLL_EXPORT GoError * DLLCALL_SYSCALL MultiplyVectors_Multiply(MultiplyVectors *arg, int64_t argLen );
+DLL_EXPORT GoError * DLLCALL_SYSCALL MultiplyVectors_FastMultiply(MultiplyVectors *arg, int64_t argLen );
 }
 #ifndef DLLCALL_NO_IMPL
 const char *_callError = "Argument length check failed. Recompile interface and check compiler alignments";
@@ -75,12 +76,18 @@ GoError *MultiplyVectors_Multiply(MultiplyVectors *arg, int64_t argLen ) {
     err = arg->Multiply();
     return err;
 }
+GoError *MultiplyVectors_FastMultiply(MultiplyVectors *arg, int64_t argLen ) {
+    if (sizeof(MultiplyVectors) != argLen) { return new GoError(_callError); }
+    GoError *err;
+    err = arg->FastMultiply();
+    return err;
+}
 
-void GetError(GoError *err, GoSlice<char> errBuf) {
-	return GoError::GetError(err, errBuf);
+void GetError(GoError *err, GoSlice<char> *errBuf) {
+	return GoError::GetError(err, *errBuf);
 }
 
 void GetCRC(uint64_t *crc) {
-    *crc = 0x00698cefaddc526cull;
+    *crc = 0xfad9b164355a2f76ull;
 }
 #endif
