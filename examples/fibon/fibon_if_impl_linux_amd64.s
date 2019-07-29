@@ -1,8 +1,4 @@
 
-TEXT ·_fibon_if_fc_alloc(SB), 0, $65536-8
-    MOVQ $0, ret+0(FP)
-    RET
-
 TEXT ·_fibon_if_fastcall(SB), 0, $65536-32
     MOVQ ptr+8(FP), DI
     MOVQ size+16(FP), SI

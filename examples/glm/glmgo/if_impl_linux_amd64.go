@@ -57,7 +57,7 @@ func if_getError(rc uintptr) error {
 }
 
 func (r *MultiplyVectors) Multiply() (err error) {
-	rc := syscall.Syscall(_if_gate_MultiplyVectors_Multiply, 2, uintptr(unsafe.Pointer(r)),
+	rc := syscall.SyscallL(_if_gate_MultiplyVectors_Multiply, 2, uintptr(unsafe.Pointer(r)),
 		uintptr(152), 0)
 	if rc != 0 {
 		return if_getError(rc)
@@ -66,8 +66,7 @@ func (r *MultiplyVectors) Multiply() (err error) {
 }
 
 func (r *MultiplyVectors) FastMultiply() (err error) {
-	rc := _if_fc_alloc()
-	rc = _if_fastcall(_if_gate_MultiplyVectors_FastMultiply, uintptr(unsafe.Pointer(r)),
+	rc := _if_fastcall(_if_gate_MultiplyVectors_FastMultiply, uintptr(unsafe.Pointer(r)),
 		uintptr(152))
 	if rc != 0 {
 		return if_getError(rc)

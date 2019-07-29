@@ -49,7 +49,7 @@ func helloif_getError(rc uintptr) error {
 }
 
 func (r *greeting) Greet() (err error) {
-	rc := syscall.Syscall(_helloif_gate_greeting_Greet, 2, uintptr(unsafe.Pointer(r)),
+	rc := syscall.SyscallL(_helloif_gate_greeting_Greet, 2, uintptr(unsafe.Pointer(r)),
 		uintptr(16), 0)
 	if rc != 0 {
 		return helloif_getError(rc)

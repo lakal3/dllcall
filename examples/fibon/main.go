@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -27,17 +26,14 @@ func main() {
 	if err != nil {
 		log.Fatal("Invalid value: ", err)
 	}
-	var result int64
+	var result *int64
 	start := time.Now()
 	dllName := "fibonlib.dll"
-	if runtime.GOOS == "linux" {
-		dllName = "./libfibonlib.so"
-	}
 	err = load_fibon_if(dllName)
 	if err != nil {
 		log.Fatal("Failed to load ", dllName, ": ", err)
 	}
-	var fn func(int64) (int64, error)
+	var fn func(int64) (*int64, error)
 	switch strings.ToLower(flag.Arg(0)) {
 	case "go":
 		fn = goFibon
@@ -54,7 +50,7 @@ func main() {
 			log.Fatal("Calculation failure: ", err)
 		}
 	}
-	fmt.Print("Result: ", result)
+	fmt.Print("Result: ", *result)
 	if count > 1 {
 		fmt.Println(" durations ", time.Now().Sub(start).Seconds()*1000, " ms")
 	} else {
@@ -62,27 +58,29 @@ func main() {
 	}
 }
 
-func goFibon(n int64) (int64, error) {
+func goFibon(n int64) (*int64, error) {
 	if n < 1 {
-		return 0, errors.New("Value must be at least 1")
+		return nil, errors.New("Value must be at least 1")
 	}
-	return fibon(n), nil
+	r := fibon(n)
+	return &r, nil
 }
 
-func stdFibon(n int64) (int64, error) {
-	cl := &calcFibonacci{n: n}
+func stdFibon(n int64) (*int64, error) {
+	var res int64
+	cl := &calcFibonacci{n: n, result: &res}
 	err := cl.calc()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	return cl.result, nil
 }
 
-func fastFibon(n int64) (int64, error) {
-	cl := &calcFibonacci{n: n}
+func fastFibon(n int64) (*int64, error) {
+	cl := &calcFibonacci{n: n, result: new(int64)}
 	err := cl.fastCalc()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	return cl.result, nil
 }

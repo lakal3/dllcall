@@ -40,8 +40,8 @@ func load_fibon_if(dllPath string) (err error) {
 	}
 	var crc uint64
 	syscall.Syscall(getcrc, 1, uintptr(unsafe.Pointer(&crc)), 0, 0)
-	if crc != 0x6fa8d99117bcd3a4 {
-		return fmt.Errorf("CRC mismatch %s != %x. DLL is not from same build than go code.", "0x6fa8d99117bcd3a4", crc)
+	if crc != 0x6db41bbc5ed789f1 {
+		return fmt.Errorf("CRC mismatch %s != %x. DLL is not from same build than go code.", "0x6db41bbc5ed789f1", crc)
 	}
 	_fibon_if_gate__getError, err = syscall.GetProcAddress(dll, "GetError")
 	if err != nil {
@@ -57,7 +57,7 @@ func fibon_if_getError(rc uintptr) error {
 }
 
 func (r *calcFibonacci) calc() (err error) {
-	rc := syscall.Syscall(_fibon_if_gate_calcFibonacci_calc, 2, uintptr(unsafe.Pointer(r)),
+	rc := syscall.SyscallL(_fibon_if_gate_calcFibonacci_calc, 2, uintptr(unsafe.Pointer(r)),
 		uintptr(16), 0)
 	if rc != 0 {
 		return fibon_if_getError(rc)
@@ -66,8 +66,7 @@ func (r *calcFibonacci) calc() (err error) {
 }
 
 func (r *calcFibonacci) fastCalc() (err error) {
-	rc := _fibon_if_fc_alloc()
-	rc = _fibon_if_fastcall(_fibon_if_gate_calcFibonacci_fastCalc, uintptr(unsafe.Pointer(r)),
+	rc := _fibon_if_fastcall(_fibon_if_gate_calcFibonacci_fastCalc, uintptr(unsafe.Pointer(r)),
 		uintptr(16))
 	if rc != 0 {
 		return fibon_if_getError(rc)

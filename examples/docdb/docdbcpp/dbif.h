@@ -33,11 +33,10 @@ struct GoError {
     std::string error;
     GoError(const char *err): error(err) {
     }
-    const char *GetError() { return error.c_str(); }
-    static void GetError(GoError *err, GoSlice<char> errBuf) {
-        size_t len = strlen(err->GetError());
+    static void GetError(GoError *err, GoSlice<char> &errBuf) {
+        size_t len = err->error.size();
         if (len >= errBuf.cap) { len = errBuf.cap - 1; }
-        strncpy(errBuf.data, err->GetError(), len);
+        strncpy(errBuf.data, &(err->error.at(0)), len);
         errBuf.len = len;
         delete err;
     }
@@ -82,7 +81,7 @@ typedef   struct dbBatch {
 #endif
 #endif
 extern "C" {
-DLL_EXPORT void DLLCALL_SYSCALL GetError(GoError *err, GoSlice<char> errBuf);
+DLL_EXPORT void DLLCALL_SYSCALL GetError(GoError *err, GoSlice<char> *errBuf);
 DLL_EXPORT void DLLCALL_SYSCALL GetCRC(uint64_t *crc);
 DLL_EXPORT GoError * DLLCALL_SYSCALL dbIf_Open(dbIf *arg, int64_t argLen );
 DLL_EXPORT GoError * DLLCALL_SYSCALL dbIf_Close(dbIf *arg, int64_t argLen );
@@ -109,8 +108,8 @@ GoError *dbBatch_Do(dbBatch *arg, int64_t argLen ) {
     return err;
 }
 
-void GetError(GoError *err, GoSlice<char> errBuf) {
-	return GoError::GetError(err, errBuf);
+void GetError(GoError *err, GoSlice<char> *errBuf) {
+	return GoError::GetError(err, *errBuf);
 }
 
 void GetCRC(uint64_t *crc) {

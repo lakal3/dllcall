@@ -106,7 +106,6 @@ func __winLoader() {
 {{ if .SafeMethods }}
 	fmt.Fprintln(fgo, "")
 	fmt.Fprintln(fgo, "func _{{ .ModuleName }}_fastcall(trap uintptr, ptr uintptr, size uintptr)(errPtr uintptr)")
-	fmt.Fprintln(fgo, "func _{{ .ModuleName }}_fc_alloc()(ret uintptr)")
 {{ end }}
 	fmt.Fprintln(fgo, "")
 	fmt.Fprintln(fgo, "func load_{{ .ModuleName }}(dllPath string)(err error) {")
@@ -166,8 +165,7 @@ func __winLoader() {
 {{ end }}
 {{ range .SafeMethods }}
 	fmt.Fprintln(fgo, "func (r *{{ .GoType}}) {{ .MethodName }}() (err error) {")
-	fmt.Fprintln(fgo, "    rc := _{{ $.ModuleName}}_fc_alloc() ")
-	fmt.Fprintln(fgo, "    rc = _{{ $.ModuleName}}_fastcall(_{{ $.ModuleName }}_gate_{{ .GoType}}_{{ .MethodName }}, uintptr(unsafe.Pointer(r)), ")
+	fmt.Fprintln(fgo, "    rc := _{{ $.ModuleName}}_fastcall(_{{ $.ModuleName }}_gate_{{ .GoType}}_{{ .MethodName }}, uintptr(unsafe.Pointer(r)), ")
     fmt.Fprintln(fgo, "      uintptr(", reflect.TypeOf(new({{ .GoType}})).Elem().Size(), "))")
     fmt.Fprintln(fgo, "    if rc != 0 {")
     fmt.Fprintln(fgo, "         return {{ $.ModuleName }}_getError(rc)")
@@ -189,10 +187,6 @@ func __winFastcall() {
 	defer fasm.Close()
 
 	fmt.Fprintln(fasm)
-	fmt.Fprintln(fasm, "TEXT ·_{{ .ModuleName }}_fc_alloc(SB), 0, $65536-8")
-	fmt.Fprintln(fasm, "    MOVQ $0, ret+0(FP)")
-    fmt.Fprintln(fasm, "    RET")
-	fmt.Fprintln(fasm, "")
 	fmt.Fprintln(fasm, "TEXT ·_{{ .ModuleName }}_fastcall(SB), 0, $65536-32")
     fmt.Fprintln(fasm, "    MOVQ ptr+8(FP), CX")
     fmt.Fprintln(fasm, "    MOVQ size+16(FP), DX")
@@ -217,10 +211,6 @@ func __linuxFastcall() {
 	defer fasm.Close()
 
 	fmt.Fprintln(fasm)
-	fmt.Fprintln(fasm, "TEXT ·_{{ .ModuleName }}_fc_alloc(SB), 0, $65536-8")
-	fmt.Fprintln(fasm, "    MOVQ $0, ret+0(FP)")
-    fmt.Fprintln(fasm, "    RET")
-	fmt.Fprintln(fasm, "")
 	fmt.Fprintln(fasm, "TEXT ·_{{ .ModuleName }}_fastcall(SB), 0, $65536-32")
     fmt.Fprintln(fasm, "    MOVQ ptr+8(FP), DI")
     fmt.Fprintln(fasm, "    MOVQ size+16(FP), SI")
@@ -314,7 +304,7 @@ func __linuxLoader() {
 	fmt.Fprintln(fgo, "")
 {{ range .Methods }}
 	fmt.Fprintln(fgo, "func (r *{{ .GoType}}) {{ .MethodName }}() (err error) {")
-	fmt.Fprintln(fgo, "    rc := syscall.Syscall(_{{ $.ModuleName }}_gate_{{ .GoType}}_{{ .MethodName }}, 2, uintptr(unsafe.Pointer(r)), ")
+	fmt.Fprintln(fgo, "    rc := syscall.SyscallL(_{{ $.ModuleName }}_gate_{{ .GoType}}_{{ .MethodName }}, 2, uintptr(unsafe.Pointer(r)), ")
     fmt.Fprintln(fgo, "      uintptr(", reflect.TypeOf(new({{ .GoType}})).Elem().Size(), "), 0)")
     fmt.Fprintln(fgo, "    if rc != 0 {")
     fmt.Fprintln(fgo, "         return {{ $.ModuleName }}_getError(rc)")
@@ -325,8 +315,7 @@ func __linuxLoader() {
 {{ end }}
 {{ range .SafeMethods }}
 	fmt.Fprintln(fgo, "func (r *{{ .GoType}}) {{ .MethodName }}() (err error) {")
-	fmt.Fprintln(fgo, "    rc := _{{ $.ModuleName}}_fc_alloc() ")
-	fmt.Fprintln(fgo, "    rc = _{{ $.ModuleName}}_fastcall(_{{ $.ModuleName }}_gate_{{ .GoType}}_{{ .MethodName }}, uintptr(unsafe.Pointer(r)), ")
+	fmt.Fprintln(fgo, "    rc := _{{ $.ModuleName}}_fastcall(_{{ $.ModuleName }}_gate_{{ .GoType}}_{{ .MethodName }}, uintptr(unsafe.Pointer(r)), ")
     fmt.Fprintln(fgo, "      uintptr(", reflect.TypeOf(new({{ .GoType}})).Elem().Size(), "))")
     fmt.Fprintln(fgo, "    if rc != 0 {")
     fmt.Fprintln(fgo, "         return {{ $.ModuleName }}_getError(rc)")

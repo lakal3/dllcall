@@ -47,7 +47,7 @@ struct GoError {
 
 typedef   struct calcFibonacci {
     int64_t n;
-    int64_t result;
+    int64_t * result;
     GoError *calc();
     GoError *fastCalc();
 } calcFibonacci ;
@@ -86,6 +86,6 @@ void GetError(GoError *err, GoSlice<char> *errBuf) {
 }
 
 void GetCRC(uint64_t *crc) {
-    *crc = 0x6fa8d99117bcd3a4ull;
+    *crc = 0x6db41bbc5ed789f1ull;
 }
 #endif

@@ -6,5 +6,5 @@ package main
 */
 type calcFibonacci struct {
 	n      int64
-	result int64
+	result *int64
 }

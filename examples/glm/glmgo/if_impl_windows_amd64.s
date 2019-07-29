@@ -1,8 +1,4 @@
 
-TEXT ·_if_fc_alloc(SB), 0, $65536-8
-    MOVQ $0, ret+0(FP)
-    RET
-
 TEXT ·_if_fastcall(SB), 0, $65536-32
     MOVQ ptr+8(FP), CX
     MOVQ size+16(FP), DX

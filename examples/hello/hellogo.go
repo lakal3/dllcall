@@ -6,15 +6,12 @@ package main
 import (
 	"fmt"
 	"log"
-	"runtime"
 	"time"
 )
 
 func main() {
 	libname := "greeting.dll"
-	if runtime.GOOS == "linux" {
-		libname = "./libgreeting.so"
-	}
+
 	err := load_helloif(libname)
 	if err != nil {
 		log.Fatal(err)

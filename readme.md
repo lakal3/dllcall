@@ -35,9 +35,9 @@ type dbIf struct{
 
 ## Generate interface
 When we invoke dllcall tool such as `dllcall dbif.go {otherdir}/dbif.h`, 
-dllcall will generate a dbif_impl_windows.go and dbif_impl_linux.go file into the current directory and dbif.h to a specified location.
+dllcall will generate a dbif_impl_windows_amd64.go and dbif_impl_linux_amd64.go file into the current directory and dbif.h to a specified location.
 
-The file name of dbif_impl_{os}.go is derived from the original go file name. C++ -file can be freely named.
+The file name of dbif_impl_{os}_amd64.go is derived from the original go file name. C++ -file can be freely named.
 
 You can use `//go:generate` directive and `go generate` command to easily upgrade the interface whenever it changes.
 
@@ -65,7 +65,7 @@ func main()  {
 
 **In Linux you must set environment variable GODEBUG=cgocheck=0**. See [why DLLCall](why.md) for details.
 
-Generator will create an {interface}\_impl\_{os}.go file that contains all methods 
+Generator will create an {interface}\_impl\_{os}_amd64.go file that contains all methods 
 defined with #cmethod. 
 
 It will also contain load\_{interface} method that takes a single file path to shared library (dll).
@@ -87,19 +87,33 @@ GoError *dbIf::Close();
 For more detailed description of comment annotations, generation process and supported types, see [generator](generator.md)
 or examples.
 
+## Safe method (experimental)
+
+Added new experimental \#csafe_method that mostly allows bypassing Go call overhead to native libraries.
+This method has several limitations and is experimental. See [Generator](generator.md) and new sample fibon for more details.
+
+
 # Status
 This project is still in early stages, but has been successfully used to embed some
 notable C/C++ libraries including sqlite3, SDL2 and several Windows only COM+ programs.
 
-Currently only 64 bit (amd64) Windows and 64 bit Linux are supported. 
+Currently only 64 bit (amd64) Windows and 64 bit Linux (amd64) are supported. 
 
 Breaking changes are still possible but not very likely.
 
+**Version 0.8.2 breaking changes**
+- Renamed generated Go interface. Generated files have now _amd64 extension to prevent build on other architectures. 
+To fix this, remove old generated files from project.
+- Linux CGO wrapper has been moved to a new package linux/syscall to support fastcall. Wrapper packages must be compiled without CGO.
+
+   
+
 ## TODO?
-- [ ] Sqlite example project using DLLCall
-- [x] Linux support - Implemented but have some issues (see [Why DLL call](why.md))
-- [ ] 32 bit support 
+- [x] Fastcall (Experimental)
 - [ ] Better support for types imported from other modules
+- [x] Linux support - Implemented but have some issues (see [Why DLL call](why.md))
+- [ ] Sqlite example project using DLLCall
+- [ ] 32 bit support 
 
 
 

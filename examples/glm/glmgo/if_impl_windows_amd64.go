@@ -15,7 +15,6 @@ var (
 )
 
 func _if_fastcall(trap uintptr, ptr uintptr, size uintptr) (errPtr uintptr)
-func _if_fc_alloc() (ret uintptr)
 
 func load_if(dllPath string) (err error) {
 	if _if_gate__getError != 0 {
@@ -66,8 +65,7 @@ func (r *MultiplyVectors) Multiply() (err error) {
 }
 
 func (r *MultiplyVectors) FastMultiply() (err error) {
-	rc := _if_fc_alloc()
-	rc = _if_fastcall(_if_gate_MultiplyVectors_FastMultiply, uintptr(unsafe.Pointer(r)),
+	rc := _if_fastcall(_if_gate_MultiplyVectors_FastMultiply, uintptr(unsafe.Pointer(r)),
 		uintptr(152))
 	if rc != 0 {
 		return if_getError(rc)
