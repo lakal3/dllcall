@@ -1,11 +1,9 @@
-// +build windows
-
 //
 package main
 
 // Generated file. Not not edit
 
-import "syscall"
+import "github.com/lakal3/dllcall/linux/syscall"
 import "unsafe"
 import "errors"
 import "fmt"
@@ -16,11 +14,10 @@ var (
 )
 
 func load_helloif(dllPath string) (err error) {
-	dll, err := syscall.LoadLibrary(dllPath)
-	if err != nil {
-		return err
+	if _helloif_gate__getError != 0 {
+		return nil
 	}
-	_helloif_gate__getError, err = syscall.GetProcAddress(dll, "GetError")
+	dll, err := syscall.LoadLibrary(dllPath)
 	if err != nil {
 		return err
 	}
@@ -38,20 +35,24 @@ func load_helloif(dllPath string) (err error) {
 	if crc != 0x21e8f5462f9aeab2 {
 		return fmt.Errorf("CRC mismatch %s != %x. DLL is not from same build than go code.", "0x21e8f5462f9aeab2", crc)
 	}
+	_helloif_gate__getError, err = syscall.GetProcAddress(dll, "GetError")
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func getError_helloif(rc uintptr) error {
+func helloif_getError(rc uintptr) error {
 	errText := make([]byte, 0, 512)
 	syscall.Syscall(_helloif_gate__getError, 2, rc, uintptr(unsafe.Pointer(&errText)), 0)
 	return errors.New(string(errText))
 }
 
 func (r *greeting) Greet() (err error) {
-	rc, _, _ := syscall.Syscall(_helloif_gate_greeting_Greet, 2, uintptr(unsafe.Pointer(r)),
+	rc := syscall.SyscallL(_helloif_gate_greeting_Greet, 2, uintptr(unsafe.Pointer(r)),
 		uintptr(16), 0)
 	if rc != 0 {
-		return getError_helloif(rc)
+		return helloif_getError(rc)
 	}
 	return nil
 }

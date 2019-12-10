@@ -10,13 +10,13 @@ All comment lines starting with #c are reserved for generator. If you want to ad
 Everything below the first #c line will be copied into the C++ interface (.h-file).
 
 
-Currently only `#ctype` and `#cmethod` are supported. If any other comment is found, lines starting with #c generator will raise an error and abort generation.
+Currently only `#ctype`, `#cmethod` and `#csafe_method` are supported. If any other comment is found, lines starting with #c generator will raise an error and abort generation.
 
 ### \#cmethod method_name
 \#cmethod will define method name for the interface. Only struct types may define methods.
 
 Interface generator will generate named method for each \#cmethod definition. 
-Their methods can be called like any standard go methods.
+Their methods can be called like any standard Go methods.
 
 Each method will return an error and take no arguments. 
 Pointer to structure is passed directly to DLL so all parameters and return values must be members of structure. 
@@ -25,7 +25,7 @@ Interface will have no separation for input or output values. We just pass a poi
 
 ### \#ctype alias_definition
 
-\#ctype will define the type alias that we use in C++ for the given go type. Typically we define some uintptr 
+\#ctype will define the type alias that we use in C++ for the given Go type. Typically we define some uintptr 
 and use a real pointer type as alias in C++. For example:
 
 ```go
@@ -34,7 +34,7 @@ and use a real pointer type as alias in C++. For example:
 */
 type stmtHandle uintptr
 ```
-Any field of type stmtHandle in a go structure will be mapped to Stmt *.
+Any field of type stmtHandle in a Go structure will be mapped to Stmt *.
 **You must ensure that aliased type has exactly the same size in C++ and in go**
 
 You can also define enums with type alias. For example:
@@ -58,15 +58,38 @@ const (
 
 Anything after #c definitions will be copied to the C++ interface.
 
+### \#csafe_method method_name (Experimental)
+
+\#csafe_method works like method unless you also specify -fast option when running dllcall.
+With fast options, dllcall will generate Go assembly file that will invoke method direcly, bypassing 
+normal Go Syscall / CGO overhead. 
+
+There are several limitations in fastcall implementation and it should be only used where perfomance is 
+critical (for example calls to set OpenGl state). You can use new example fibon to experiment with actual call overhead.
+In most cases overhead is not relevant.
+
+To mark method as a safe_method it:
+- MUST NOT use stack more that 63k. Exceeding this limit will crash your program!
+- SHOULD NOT use any IO
+- SHOULD NOT last over 1ms. Use normal call if in any doubt 
+- CAN NOT return result(s) in structure variables. You may still use pointer to return values
+as long as you are sure that these points to heap and not stack!
+
+*In order to support Go assembler in fastcall interfaces, Linux DLL loader was moved to separate package linux/syscall. 
+Go´s inbuilt assembler wont work if package has any CGO code. See issue [19948](https://github.com/golang/go/issues/19448) for details.*
+ 
+This syscall library has similar methods to load and invoke functions from shared libraries that
+already exists on Go´s standard syscall library on Windows.  
+
 ## Running generator
 
-After comment scanning, the generator will create a new go file that includes a copy of the interface
+After comment scanning, the generator will create a new Go file that includes a copy of the interface
 and additional code to generate actual interfaces. 
 
 Generator will compile and run this code. It will use reflection to parse type information and 
 use that information to generate actual C++ interface file.
 
-Generator temporary go file will be deleted after generation process. You can use -keep flag to preserve generator temporary go file. 
+Generator temporary Go file will be deleted after generation process. You can use -keep flag to preserve generator temporary go file. 
  
 Currently generator supports following types that have well defined counterparts on C++ side.
 - Any size of int and uint types (uint8, int8, uint16, int16, ...). 

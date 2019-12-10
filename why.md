@@ -11,7 +11,7 @@ CGO has some challenges, especially in Windows
 You cannot switch to a compiler that does not generate and consume unix style archive files. LIB files are standard on Windows.
 Even newer CLANG compilers on Windows will consume and produce LIB files.
 
-2\. CGO slows down go compilation
+2\. CGO slows down Go compilation
 
 3\. Difficult binary distribution of C/C++ part
  
@@ -43,21 +43,21 @@ Even newer CLANG compilers on Windows will consume and produce LIB files.
  
  ## Linux support
  
- Internally DLLCall uses go standard syscall mechanism on Windows to load shared libraries and invoke methods from them. 
+ Internally DLLCall uses Go standard syscall mechanism on Windows to load shared libraries and invoke methods from them. 
  DLLCall just simplifies interface generation and maintenance. 
  
  Unfortunately, syscalls in Linux are implemented differently and 
- syscall mechanism cannot call Linux shared libraries (.so)
+ syscall mechanism cannot call Linux shared libraries (.so). Dllcall has package linux/syscall that simulates
+ Windows syscall functionalities. There methods are implemented with CGO and dlopen/dlsym methods.
  
- It is possible to import dlopen/dlsym using CGO but this tends to ruin the original
- idea to support shared libraries without CGO. There is no pure go dlopen/dlsym implementation
- that I am aware of. See issue golang/go#18296 for more discussion about this.
+ *There is no pure Go dlopen/dlsym implementation
+ that I am aware of. See issue golang/go#18296 for more discussion about this.*
  
  In addition, if we invoke loaded APIs through CGO, it will detect that we
- have pointers to go heap and will panic. **You can and must disable this check by setting environment variable GODEBUG=cgocheck=0** 
+ have pointers to Go heap and will panic. **You can and must disable this check by setting environment variable GODEBUG=cgocheck=0** 
  
- Generally it is advisable not to send a pointer to Go-heap into C/C++ libraries as they are not aware of go's garbage collector.
- In this case the interface code is aware of calling the environment so passing go slices and strings should be ok.
+ Generally it is advisable not to send a pointer to Go-heap into C/C++ libraries as they are not aware of Go's garbage collector.
+ In this case the interface code is aware of calling the environment so passing Go slices and strings should be ok.
  
  Even when CGO is used to load libraries we can keep certain benefits such as:
  - Ability to choose compiler (Clang) for shared library compilation

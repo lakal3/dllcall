@@ -31,9 +31,7 @@ func generate(gofile, cfile string) error {
 		if len(it.cdecl) > 0 {
 			dt.CDecl = append(dt.CDecl, it.cdecl)
 		}
-		for _, imp := range it.imports {
-			dt.GoTypes = append(dt.GoTypes, imp)
-		}
+
 		if len(it.ctype) > 0 {
 			dt.Aliases[it.typeName] = genAlias{GoType: it.typeName, CAlias: it.ctype}
 		} else {
@@ -41,6 +39,13 @@ func generate(gofile, cfile string) error {
 		}
 		for _, m := range it.methods {
 			dt.Methods = append(dt.Methods, genMethod{GoType: it.typeName, MethodName: m})
+		}
+		for _, m := range it.safeMethods {
+			if fFastcall {
+				dt.SafeMethods = append(dt.SafeMethods, genMethod{GoType: it.typeName, MethodName: m})
+			} else {
+				dt.Methods = append(dt.Methods, genMethod{GoType: it.typeName, MethodName: m})
+			}
 		}
 	}
 	if len(dt.GoTypes) == 0 {
@@ -105,6 +110,7 @@ type genData struct {
 	GoTypes      []string
 	Header       string
 	Methods      []genMethod
+	SafeMethods  []genMethod
 	CRC          string
 }
 
@@ -152,7 +158,7 @@ func genTempFile(dt *genData) (content []byte, err error) {
 	}
 	templ := template.New("gen")
 	templ.Funcs(genFuncs)
-	templ, err = templ.Parse(generatorCode1 + loadWin + loadLinux + generatorCode2)
+	templ, err = templ.Parse(generatorCode1 + loadWin + winFastcall + loadLinux + linuxFastcall + generatorCode2)
 	if err != nil {
 		return nil, err
 	}

@@ -8,6 +8,7 @@ import (
 )
 
 var fKeep bool
+var fFastcall bool
 
 func main() {
 	err := sys_init()
@@ -15,6 +16,7 @@ func main() {
 		log.Fatal(err)
 	}
 	flag.BoolVar(&fKeep, "keep", false, "Keep temp generator file")
+	flag.BoolVar(&fFastcall, "fast", false, "Use fastcall for csafe_method(s)")
 	flag.Parse()
 	if flag.NArg() < 2 {
 		usage()
@@ -33,7 +35,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Println("dllcall v0.7.2")
+	fmt.Println("dllcall v0.8.2")
 	fmt.Println("Usage: dllcall [flags] go_file cpp_file")
 	os.Exit(1)
 }
