@@ -135,7 +135,7 @@ func __winLoader() {
 	fmt.Fprintln(fgo, "        return fmt.Errorf(\"GetCRC: %v\", err)")
 	fmt.Fprintln(fgo, "    }")
 	fmt.Fprintln(fgo, "    var crc uint64")
-	fmt.Fprintln(fgo, "    syscall.Syscall(getcrc,1,uintptr(unsafe.Pointer(&crc)),0,0)")
+	fmt.Fprintln(fgo, "    syscall.SyscallN(getcrc,uintptr(unsafe.Pointer(&crc)))")
     fmt.Fprintln(fgo, "    if crc != {{ .CRC }} {")
     fmt.Fprintln(fgo, "        return fmt.Errorf(\"CRC mismatch %s != %x. DLL is not from same build than go code.\",\"{{ .CRC }}\", crc)")
     fmt.Fprintln(fgo, "    }")
@@ -148,14 +148,14 @@ func __winLoader() {
 	fmt.Fprintln(fgo, "")
 	fmt.Fprintln(fgo, "func {{ $.ModuleName }}_getError(rc uintptr)(error) {")
 	fmt.Fprintln(fgo, "    errText := make([]byte, 0, 512)")
-	fmt.Fprintln(fgo, "    syscall.Syscall(_{{ $.ModuleName }}_gate__getError, 2, rc, uintptr(unsafe.Pointer(&errText)), 0)")
+	fmt.Fprintln(fgo, "    syscall.SyscallN(_{{ $.ModuleName }}_gate__getError, rc, uintptr(unsafe.Pointer(&errText)))")
 	fmt.Fprintln(fgo, "    return errors.New(string(errText))")
 	fmt.Fprintln(fgo, "}")
 	fmt.Fprintln(fgo, "")
 {{ range .Methods }}
 	fmt.Fprintln(fgo, "func (r *{{ .GoType}}) {{ .MethodName }}() (err error) {")
-	fmt.Fprintln(fgo, "    rc, _, _ := syscall.Syscall(_{{ $.ModuleName }}_gate_{{ .GoType}}_{{ .MethodName }}, 2, uintptr(unsafe.Pointer(r)), ")
-    fmt.Fprintln(fgo, "      uintptr(", reflect.TypeOf(new({{ .GoType}})).Elem().Size(), "), 0)")
+	fmt.Fprint(fgo, "    rc, _, _ := syscall.SyscallN(_{{ $.ModuleName }}_gate_{{ .GoType}}_{{ .MethodName }}, uintptr(unsafe.Pointer(r)), ")
+    fmt.Fprintln(fgo, "      uintptr(", reflect.TypeOf(new({{ .GoType}})).Elem().Size(), "))")
     fmt.Fprintln(fgo, "    if rc != 0 {")
     fmt.Fprintln(fgo, "         return {{ $.ModuleName }}_getError(rc)")
     fmt.Fprintln(fgo, "    }")
@@ -242,6 +242,9 @@ func __linuxLoader() {
 	fmt.Fprintln(fgo, "import \"unsafe\"")
 	fmt.Fprintln(fgo, "import \"errors\"")
 	fmt.Fprintln(fgo, "import \"fmt\"")
+	{{ if .Pin }}
+	fmt.Fprintln(fgo, "import \"runtime\"")
+	{{ end }}
 	fmt.Fprintln(fgo, "")
 	fmt.Fprintln(fgo, "var (")
 	fmt.Fprintln(fgo, "    _{{ $.ModuleName }}_gate__getError uintptr")
@@ -262,7 +265,12 @@ func __linuxLoader() {
 	fmt.Fprintln(fgo, "    if _{{ $.ModuleName }}_gate__getError != 0 {")
 	fmt.Fprintln(fgo, "        return nil")
 	fmt.Fprintln(fgo, "    }")
-
+	{{ if not .Pin }}
+	fmt.Fprintln(fgo, "    err = syscall.DisableCgocheck()")
+	fmt.Fprintln(fgo, "	   if err != nil {")
+	fmt.Fprintln(fgo, "        return err")
+	fmt.Fprintln(fgo, "    }")
+	{{ end }}
 	fmt.Fprintln(fgo, "    dll, err := syscall.LoadLibrary(dllPath)")
 	fmt.Fprintln(fgo, "	   if err != nil {")
 	fmt.Fprintln(fgo, "        return err")
@@ -285,7 +293,7 @@ func __linuxLoader() {
 	fmt.Fprintln(fgo, "        return fmt.Errorf(\"GetCRC: %v\", err)")
 	fmt.Fprintln(fgo, "    }")
 	fmt.Fprintln(fgo, "    var crc uint64")
-	fmt.Fprintln(fgo, "    syscall.Syscall(getcrc,1,uintptr(unsafe.Pointer(&crc)),0,0)")
+	fmt.Fprintln(fgo, "    syscall.SyscallN(getcrc,uintptr(unsafe.Pointer(&crc)))")
     fmt.Fprintln(fgo, "    if crc != {{ .CRC }} {")
     fmt.Fprintln(fgo, "        return fmt.Errorf(\"CRC mismatch %s != %x. DLL is not from same build than go code.\",\"{{ .CRC }}\", crc)")
     fmt.Fprintln(fgo, "    }")
@@ -298,14 +306,20 @@ func __linuxLoader() {
 	fmt.Fprintln(fgo, "")
 	fmt.Fprintln(fgo, "func {{ $.ModuleName }}_getError(rc uintptr)(error) {")
 	fmt.Fprintln(fgo, "    errText := make([]byte, 0, 512)")
-	fmt.Fprintln(fgo, "    syscall.Syscall(_{{ $.ModuleName }}_gate__getError, 2, rc, uintptr(unsafe.Pointer(&errText)), 0)")
+	fmt.Fprintln(fgo, "    syscall.SyscallN(_{{ $.ModuleName }}_gate__getError, rc, uintptr(unsafe.Pointer(&errText)))")
 	fmt.Fprintln(fgo, "    return errors.New(string(errText))")
 	fmt.Fprintln(fgo, "}")
 	fmt.Fprintln(fgo, "")
+	{{ $pin := .Pin }}
+	var tt reflect.Type
 {{ range .Methods }}
 	fmt.Fprintln(fgo, "func (r *{{ .GoType}}) {{ .MethodName }}() (err error) {")
-	fmt.Fprintln(fgo, "    rc := syscall.SyscallL(_{{ $.ModuleName }}_gate_{{ .GoType}}_{{ .MethodName }}, 2, uintptr(unsafe.Pointer(r)), ")
-    fmt.Fprintln(fgo, "      uintptr(", reflect.TypeOf(new({{ .GoType}})).Elem().Size(), "), 0)")
+	tt = reflect.TypeOf(new({{ .GoType}}))
+	{{ if $pin }}
+	_emit_pin(fgo, tt)
+	{{ end }}
+	fmt.Fprint(fgo, "    rc, _, _ := syscall.SyscallN(_{{ $.ModuleName }}_gate_{{ .GoType}}_{{ .MethodName }}, uintptr(unsafe.Pointer(r)), ")
+    fmt.Fprintln(fgo, "      uintptr(", tt.Elem().Size(), "))")
     fmt.Fprintln(fgo, "    if rc != 0 {")
     fmt.Fprintln(fgo, "         return {{ $.ModuleName }}_getError(rc)")
     fmt.Fprintln(fgo, "    }")
@@ -412,6 +426,29 @@ func _gen_CType(typeName string, t reflect.Type) string {
 	return t.Name()
 }
 
+func _emit_pin(fgo *os.File, t reflect.Type) {
+	needPin := false
+	t = t.Elem()
+	for idx := 0; idx < t.NumField(); idx++ {
+		f := t.Field(idx)
+		if f.Type.Kind() == reflect.Slice || f.Type.Kind() == reflect.Ptr || f.Type.Kind() == reflect.String {
+			if !needPin {
+				_, _ = fmt.Fprintln(fgo, "    var p runtime.Pinner")
+				_, _ = fmt.Fprintln(fgo, "    defer p.Unpin()")
+				needPin = true
+			}
+			switch (f.Type.Kind()) {
+			case reflect.Ptr:
+				_, _ = fmt.Fprintf(fgo, "    p.Pin(r.%s)\n", f.Name)
+			case reflect.Slice:
+				_, _ = fmt.Fprintf(fgo, "    p.Pin(unsafe.SliceData(r.%s))\n", f.Name)
+			case reflect.String:
+				_, _ = fmt.Fprintf(fgo, "    p.Pin(unsafe.StringData(r.%s))\n", f.Name)
+			}
+		}
+	}
+}
+
 var _gen_alias = map[string]string {
 {{ range .Aliases}}    "{{ .GoType }}" : "{{ .CAlias }}",
 {{ end }}
@@ -420,8 +457,6 @@ var _gen_alias = map[string]string {
 
 const header = `
 // Generated file. Not not edit
-#define _CRT_SECURE_NO_WARNINGS
-
 #include <cstdint>
 #include <string>
 #include <cstring>

@@ -36,15 +36,16 @@ type Handle uintptr
 
 // LoadLibrary load shared object file (.so) and gives a handle to it.
 // If libraryPath name looks like Windows DLL name (is has .dll extension) it will be converted to Linux equivalent
-// Like someapi.dll -> ./libsomeapi.so
+// Like someapi.dll -> libsomeapi.so
 func LoadLibrary(libraryPath string) (Handle, error) {
 	if strings.HasSuffix(strings.ToLower(libraryPath), ".dll") {
 		// Convert Windows dll name to Linux equivalent
-		libraryPath = "./lib" + libraryPath[:len(libraryPath)-4] + ".so"
+		libraryPath = "lib" + libraryPath[:len(libraryPath)-4] + ".so"
 	}
 	handle := C.dlopen(C.CString(libraryPath), C.RTLD_NOW)
 	if uintptr(handle) == 0 {
-		return 0, fmt.Errorf("Load %s failed", libraryPath)
+		errText := string(C.GoString(C.dlerror()))
+		return 0, fmt.Errorf("Load %s failed: %s", libraryPath, errText)
 	}
 	return Handle(handle), nil
 }
@@ -63,22 +64,22 @@ func GetProcAddress(dll Handle, exportName string) (trap uintptr, err error) {
 	return uintptr(mh), nil
 }
 
-// Syscall invoke function retrieved with GetProcAddress
-func SyscallL(trap uintptr, nargs int, a1 uintptr, a2 uintptr, a3 uintptr) uintptr {
-	switch nargs {
+// SyscallL invoke function retrieved with GetProcAddress
+func SyscallL(trap uintptr, args ...uintptr) uintptr {
+	switch len(args) {
 	case 0:
 		return uintptr(C.invoke0(unsafe.Pointer(trap)))
 	case 1:
-		return uintptr(C.invoke1(unsafe.Pointer(trap), unsafe.Pointer(a1)))
+		return uintptr(C.invoke1(unsafe.Pointer(trap), unsafe.Pointer(args[0])))
 	case 2:
-		return uintptr(C.invoke2(unsafe.Pointer(trap), unsafe.Pointer(a1), unsafe.Pointer(a2)))
+		return uintptr(C.invoke2(unsafe.Pointer(trap), unsafe.Pointer(args[0]), unsafe.Pointer(args[1])))
 	case 3:
-		return uintptr(C.invoke3(unsafe.Pointer(trap), unsafe.Pointer(a1), unsafe.Pointer(a2), unsafe.Pointer(a3)))
+		return uintptr(C.invoke3(unsafe.Pointer(trap), unsafe.Pointer(args[0]), unsafe.Pointer(args[1]), unsafe.Pointer(args[2])))
 	}
-	panic("Nargs must be from 0 to 3")
+	panic("len args must be from 0 to 3")
 }
 
-// Syscall with matching signature to Windows one. r1 will always be 0 and err nil
-func Syscall(trap uintptr, nargs int, a1 uintptr, a2 uintptr, a3 uintptr) (r0 uintptr, r1 uintptr, err error) {
-	return SyscallL(trap, nargs, a1, a2, a3), 0, nil
+// SyscallN with matching signature to Windows one. r1 will always be 0 and err nil
+func SyscallN(trap uintptr, args ...uintptr) (r0 uintptr, r1 uintptr, err error) {
+	return SyscallL(trap, args...), 0, nil
 }

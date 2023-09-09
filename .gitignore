@@ -3,3 +3,5 @@ ctest/
 Build/
 *.exe
 *_temp.go
+*.so
+hello

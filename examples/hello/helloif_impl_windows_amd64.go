@@ -1,4 +1,3 @@
-//
 package main
 
 // Generated file. Not not edit
@@ -31,9 +30,9 @@ func load_helloif(dllPath string) (err error) {
 		return fmt.Errorf("GetCRC: %v", err)
 	}
 	var crc uint64
-	syscall.Syscall(getcrc, 1, uintptr(unsafe.Pointer(&crc)), 0, 0)
-	if crc != 0x21e8f5462f9aeab2 {
-		return fmt.Errorf("CRC mismatch %s != %x. DLL is not from same build than go code.", "0x21e8f5462f9aeab2", crc)
+	syscall.SyscallN(getcrc, uintptr(unsafe.Pointer(&crc)))
+	if crc != 0x9cc3656ee6911505 {
+		return fmt.Errorf("CRC mismatch %s != %x. DLL is not from same build than go code.", "0x9cc3656ee6911505", crc)
 	}
 	_helloif_gate__getError, err = syscall.GetProcAddress(dll, "GetError")
 	if err != nil {
@@ -44,13 +43,12 @@ func load_helloif(dllPath string) (err error) {
 
 func helloif_getError(rc uintptr) error {
 	errText := make([]byte, 0, 512)
-	syscall.Syscall(_helloif_gate__getError, 2, rc, uintptr(unsafe.Pointer(&errText)), 0)
+	syscall.SyscallN(_helloif_gate__getError, rc, uintptr(unsafe.Pointer(&errText)))
 	return errors.New(string(errText))
 }
 
 func (r *greeting) Greet() (err error) {
-	rc, _, _ := syscall.Syscall(_helloif_gate_greeting_Greet, 2, uintptr(unsafe.Pointer(r)),
-		uintptr(16), 0)
+	rc, _, _ := syscall.SyscallN(_helloif_gate_greeting_Greet, uintptr(unsafe.Pointer(r)), uintptr(48))
 	if rc != 0 {
 		return helloif_getError(rc)
 	}

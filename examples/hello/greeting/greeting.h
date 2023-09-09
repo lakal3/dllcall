@@ -1,7 +1,5 @@
 
 // Generated file. Not not edit
-#define _CRT_SECURE_NO_WARNINGS
-
 #include <cstdint>
 #include <string>
 #include <cstring>
@@ -46,7 +44,9 @@ struct GoError {
 
 
 typedef   struct greeting {
-    GoString greeting;
+    GoString text;
+    GoSlice<uint8_t > data;
+    greeting * next;
     GoError *Greet();
 } greeting ;
 #ifndef DLL_EXPORT
@@ -77,6 +77,6 @@ void GetError(GoError *err, GoSlice<char> *errBuf) {
 }
 
 void GetCRC(uint64_t *crc) {
-    *crc = 0x21e8f5462f9aeab2ull;
+    *crc = 0x9cc3656ee6911505ull;
 }
 #endif

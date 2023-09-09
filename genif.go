@@ -7,7 +7,6 @@ import (
 	"go/ast"
 	"go/printer"
 	"go/token"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -19,6 +18,7 @@ func generate(gofile, cfile string) error {
 	tmpName := ffSlash(cfile) + "_temp.go"
 	dt := &genData{
 		GoTargetFile: ffSlash(gofile), TargetFile: ffSlash(cfile), Header: header, PackageName: packageName, CRC: crc,
+		Pin: fPin,
 	}
 	tmp := filepath.Base(gofile)
 	dt.ModuleName = tmp[0 : len(tmp)-5] // _impl.go removed
@@ -56,7 +56,7 @@ func generate(gofile, cfile string) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(tmpName, content, 0x600)
+	err = os.WriteFile(tmpName, content, 0600)
 	if err != nil {
 		return err
 	}
@@ -112,6 +112,7 @@ type genData struct {
 	Methods      []genMethod
 	SafeMethods  []genMethod
 	CRC          string
+	Pin          bool
 }
 
 var genFuncs = template.FuncMap{
