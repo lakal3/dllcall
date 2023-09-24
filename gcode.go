@@ -3,11 +3,17 @@ package main
 const generatorCode1 = `
 func main() {
 	__buildHFile()
+{{ if .BuildWindows }}
 	__winLoader()
-	__linuxLoader()
-{{ if .SafeMethods }}
+{{     if .SafeMethods }}
 	__winFastcall()
+{{     end }}
+{{ end }}
+{{ if .BuildLinux }}
+	__linuxLoader()
+{{     if .SafeMethods }}
     __linuxFastcall()
+{{     end }}
 {{ end }}
 }
 

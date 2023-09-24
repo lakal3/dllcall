@@ -1,4 +1,3 @@
-//
 package main
 
 // Generated file. Not not edit
@@ -38,7 +37,7 @@ func load_fibon_if(dllPath string) (err error) {
 		return fmt.Errorf("GetCRC: %v", err)
 	}
 	var crc uint64
-	syscall.Syscall(getcrc, 1, uintptr(unsafe.Pointer(&crc)), 0, 0)
+	syscall.SyscallN(getcrc, uintptr(unsafe.Pointer(&crc)))
 	if crc != 0x6db41bbc5ed789f1 {
 		return fmt.Errorf("CRC mismatch %s != %x. DLL is not from same build than go code.", "0x6db41bbc5ed789f1", crc)
 	}
@@ -51,13 +50,12 @@ func load_fibon_if(dllPath string) (err error) {
 
 func fibon_if_getError(rc uintptr) error {
 	errText := make([]byte, 0, 512)
-	syscall.Syscall(_fibon_if_gate__getError, 2, rc, uintptr(unsafe.Pointer(&errText)), 0)
+	syscall.SyscallN(_fibon_if_gate__getError, rc, uintptr(unsafe.Pointer(&errText)))
 	return errors.New(string(errText))
 }
 
 func (r *calcFibonacci) calc() (err error) {
-	rc, _, _ := syscall.Syscall(_fibon_if_gate_calcFibonacci_calc, 2, uintptr(unsafe.Pointer(r)),
-		uintptr(16), 0)
+	rc, _, _ := syscall.SyscallN(_fibon_if_gate_calcFibonacci_calc, uintptr(unsafe.Pointer(r)), uintptr(16))
 	if rc != 0 {
 		return fibon_if_getError(rc)
 	}

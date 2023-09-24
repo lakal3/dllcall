@@ -1,4 +1,3 @@
-//
 package main
 
 // Generated file. Not not edit
@@ -41,7 +40,7 @@ func load_dbif(dllPath string) (err error) {
 		return fmt.Errorf("GetCRC: %v", err)
 	}
 	var crc uint64
-	syscall.Syscall(getcrc, 1, uintptr(unsafe.Pointer(&crc)), 0, 0)
+	syscall.SyscallN(getcrc, uintptr(unsafe.Pointer(&crc)))
 	if crc != 0x98b5330a8380a2f0 {
 		return fmt.Errorf("CRC mismatch %s != %x. DLL is not from same build than go code.", "0x98b5330a8380a2f0", crc)
 	}
@@ -54,13 +53,12 @@ func load_dbif(dllPath string) (err error) {
 
 func dbif_getError(rc uintptr) error {
 	errText := make([]byte, 0, 512)
-	syscall.Syscall(_dbif_gate__getError, 2, rc, uintptr(unsafe.Pointer(&errText)), 0)
+	syscall.SyscallN(_dbif_gate__getError, rc, uintptr(unsafe.Pointer(&errText)))
 	return errors.New(string(errText))
 }
 
 func (r *dbIf) Open() (err error) {
-	rc, _, _ := syscall.Syscall(_dbif_gate_dbIf_Open, 2, uintptr(unsafe.Pointer(r)),
-		uintptr(24), 0)
+	rc, _, _ := syscall.SyscallN(_dbif_gate_dbIf_Open, uintptr(unsafe.Pointer(r)), uintptr(24))
 	if rc != 0 {
 		return dbif_getError(rc)
 	}
@@ -68,8 +66,7 @@ func (r *dbIf) Open() (err error) {
 }
 
 func (r *dbIf) Close() (err error) {
-	rc, _, _ := syscall.Syscall(_dbif_gate_dbIf_Close, 2, uintptr(unsafe.Pointer(r)),
-		uintptr(24), 0)
+	rc, _, _ := syscall.SyscallN(_dbif_gate_dbIf_Close, uintptr(unsafe.Pointer(r)), uintptr(24))
 	if rc != 0 {
 		return dbif_getError(rc)
 	}
@@ -77,8 +74,7 @@ func (r *dbIf) Close() (err error) {
 }
 
 func (r *dbBatch) Do() (err error) {
-	rc, _, _ := syscall.Syscall(_dbif_gate_dbBatch_Do, 2, uintptr(unsafe.Pointer(r)),
-		uintptr(24), 0)
+	rc, _, _ := syscall.SyscallN(_dbif_gate_dbBatch_Do, uintptr(unsafe.Pointer(r)), uintptr(24))
 	if rc != 0 {
 		return dbif_getError(rc)
 	}

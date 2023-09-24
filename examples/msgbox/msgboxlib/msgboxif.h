@@ -43,32 +43,11 @@ struct GoError {
 #endif
 
 
-
-
-
-enum operKind: int32_t {
-  Get = 0,
-  Put = 1,
-  Delete = 2
-};
-
-
-
-typedef   struct dbIf {
-    Stmt * handle;
-    GoString dbName;
-    GoError *Open();
-    GoError *Close();
-} dbIf ;
-typedef   struct dbOper {
-    operKind kind;
-    GoString key;
-    GoSlice<uint8_t > value;
-} dbOper ;
-typedef   struct dbBatch {
-    GoSlice<dbOper > operations;
-    GoError *Do();
-} dbBatch ;
+typedef   struct msgBox {
+    GoString title;
+    GoString message;
+    GoError *show();
+} msgBox ;
 #ifndef DLL_EXPORT
 #ifdef _WIN32
 #define DLL_EXPORT  __declspec(dllexport) 
@@ -81,28 +60,14 @@ typedef   struct dbBatch {
 extern "C" {
 DLL_EXPORT void DLLCALL_SYSCALL GetError(GoError *err, GoSlice<char> *errBuf);
 DLL_EXPORT void DLLCALL_SYSCALL GetCRC(uint64_t *crc);
-DLL_EXPORT GoError * DLLCALL_SYSCALL dbIf_Open(dbIf *arg, int64_t argLen );
-DLL_EXPORT GoError * DLLCALL_SYSCALL dbIf_Close(dbIf *arg, int64_t argLen );
-DLL_EXPORT GoError * DLLCALL_SYSCALL dbBatch_Do(dbBatch *arg, int64_t argLen );
+DLL_EXPORT GoError * DLLCALL_SYSCALL msgBox_show(msgBox *arg, int64_t argLen );
 }
 #ifndef DLLCALL_NO_IMPL
 const char *_callError = "Argument length check failed. Recompile interface and check compiler alignments";
-GoError *dbIf_Open(dbIf *arg, int64_t argLen ) {
-    if (sizeof(dbIf) != argLen) { return new GoError(_callError); }
+GoError *msgBox_show(msgBox *arg, int64_t argLen ) {
+    if (sizeof(msgBox) != argLen) { return new GoError(_callError); }
     GoError *err;
-    err = arg->Open();
-    return err;
-}
-GoError *dbIf_Close(dbIf *arg, int64_t argLen ) {
-    if (sizeof(dbIf) != argLen) { return new GoError(_callError); }
-    GoError *err;
-    err = arg->Close();
-    return err;
-}
-GoError *dbBatch_Do(dbBatch *arg, int64_t argLen ) {
-    if (sizeof(dbBatch) != argLen) { return new GoError(_callError); }
-    GoError *err;
-    err = arg->Do();
+    err = arg->show();
     return err;
 }
 
@@ -111,6 +76,6 @@ void GetError(GoError *err, GoSlice<char> *errBuf) {
 }
 
 void GetCRC(uint64_t *crc) {
-    *crc = 0x98b5330a8380a2f0ull;
+    *crc = 0x63a150b21b59a5fcull;
 }
 #endif

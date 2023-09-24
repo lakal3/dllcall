@@ -27,6 +27,11 @@ func generate(gofile, cfile string) error {
 	for _, st := range stdAlias {
 		dt.Aliases[st.GoType] = st
 	}
+	dt.BuildLinux = fLinux
+	dt.BuildWindows = fWindows
+	if !fLinux && !fWindows {
+		dt.BuildWindows, dt.BuildLinux = true, true
+	}
 	for _, it := range typeList {
 		if len(it.cdecl) > 0 {
 			dt.CDecl = append(dt.CDecl, it.cdecl)
@@ -113,6 +118,8 @@ type genData struct {
 	SafeMethods  []genMethod
 	CRC          string
 	Pin          bool
+	BuildLinux   bool
+	BuildWindows bool
 }
 
 var genFuncs = template.FuncMap{

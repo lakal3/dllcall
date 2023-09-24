@@ -10,6 +10,8 @@ import (
 var fKeep bool
 var fFastcall bool
 var fPin bool
+var fLinux bool
+var fWindows bool
 
 func main() {
 	err := sys_init()
@@ -19,6 +21,8 @@ func main() {
 	flag.BoolVar(&fKeep, "keep", false, "Keep temp generator file")
 	flag.BoolVar(&fFastcall, "fast", false, "Use fastcall for csafe_method(s)")
 	flag.BoolVar(&fPin, "pin", false, "Pin memory for inner pointers. This feature required go1.21")
+	flag.BoolVar(&fLinux, "linux", false, "Build only Linux interface")
+	flag.BoolVar(&fWindows, "win", false, "Build only Windows interface")
 	flag.Parse()
 	if flag.NArg() < 2 {
 		usage()

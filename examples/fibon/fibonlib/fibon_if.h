@@ -1,7 +1,5 @@
 
 // Generated file. Not not edit
-#define _CRT_SECURE_NO_WARNINGS
-
 #include <cstdint>
 #include <string>
 #include <cstring>
