@@ -1,6 +1,6 @@
 package main
 
-// Generated file. Not not edit
+// Generated file. Do not edit
 
 import "github.com/lakal3/dllcall/linux/syscall"
 import "unsafe"

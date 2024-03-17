@@ -93,10 +93,6 @@ to structure member after call has been completed, so this check is unnecessary.
 
 There are three ways to suppress this check
 
-### Environment variable
-
-Add environment variable GODEBUG=cgocheck=0. This is awkward as we must set flag before running any executable using dllcalls.
-
 ### Pinned memory
 In version 1.21 Go introduced new Pin mechanism that allows marking all pointer that we want to use in calls to C++ program so
 that Gos garbage collector is aware of them. 
@@ -110,7 +106,8 @@ Pinning is a standard way to handle pointers to Go memory, but unfortunately it 
 Dllcall uses hack to turn off cgocheck. This hack is in function DisableCgocheck. 
 Generated code will call this function when loading .dll/.so file.
 
-If you select -pin option, cgocheck is not disabled because it will allow pinned memory pointers without panic.
+If you select -pin option, cgocheck is not disabled because it will allow pinned memory pointers without panic. 
+Pin option is available only in go 1.21 and later.
 
 It is possible this hack will not work in some future version of Go, so you can change this function
 to disable this hack. 
@@ -124,19 +121,17 @@ not emit any code to disable checks of to pin memory even if -pin flag is given
 ## Safe method (experimental)
 
 *In go 1.21.1 safemethod calls will fail because they set new value to SP (Stack pointer). 
-This is due to change in go1.21 witch will hopefully be fixed in go 1.21.2*
+This is due to change in go1.21. It has been fixed in go1.22 for Windows but Linux still*
 
 Added new experimental \#csafe_method that mostly allows bypassing Go call overhead to native libraries.
 This method has several limitations and is experimental. See [Generator](generator.md) and new sample fibon for more details.
 
+You should only use fast call when absolutely necessary like accessing high resolution timer in Windows. 
 
 # Status
-This project is still in early stages, but has been successfully used to embed some
-notable C/C++ libraries including sqlite3, SDL2 and several Windows only COM+ programs.
 
 Currently only 64 bit (amd64) Windows and 64 bit Linux (amd64) are supported. 
 
-Breaking changes are still possible but not very likely.
 
 **Version 0.8.2 breaking changes**
 - Renamed generated Go interface. Generated files have now _amd64 extension to prevent build on other architectures. 
@@ -149,9 +144,7 @@ To fix this, remove old generated files from project.
 - [x] Pinned memory available with Go 1.21
 - [x] Fastcall (Experimental)
 - [ ] Better support for types imported from other modules
-- [x] Linux support - Implemented but have some issues (see [Why DLL call](why.md))
-- [ ] Sqlite example project using DLLCall
-- [ ] 32 bit support 
+- [x] Linux support 
 
 
 

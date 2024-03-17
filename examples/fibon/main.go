@@ -1,6 +1,6 @@
 // Fibonacci example to measure performance between different calls
 
-//go:generate dllcall -fast -keep fibon_if.go fibonlib/fibon_if.h
+//go:generate dllcall -fast fibon_if.go fibonlib/fibon_if.h
 package main
 
 import (

@@ -93,7 +93,7 @@ func __winLoader() {
 	fmt.Fprintln(fgo, "")
 	fmt.Fprintln(fgo, "//")
 	fmt.Fprintln(fgo, "package {{ .PackageName }}")
-	fmt.Fprintln(fgo, "// Generated file. Not not edit")
+	fmt.Fprintln(fgo, "// Generated file. Do not edit")
 	fmt.Fprintln(fgo, "")
 	fmt.Fprintln(fgo, "import \"syscall\"")
 	fmt.Fprintln(fgo, "import \"unsafe\"")
@@ -242,7 +242,7 @@ func __linuxLoader() {
 	fmt.Fprintln(fgo, "")
 	fmt.Fprintln(fgo, "//")
 	fmt.Fprintln(fgo, "package {{ .PackageName }}")
-	fmt.Fprintln(fgo, "// Generated file. Not not edit")
+	fmt.Fprintln(fgo, "// Generated file. Do not edit")
 	fmt.Fprintln(fgo, "")
 	fmt.Fprintln(fgo, "import \"github.com/lakal3/dllcall/linux/syscall\"")
 	fmt.Fprintln(fgo, "import \"unsafe\"")
@@ -462,7 +462,7 @@ var _gen_alias = map[string]string {
 `
 
 const header = `
-// Generated file. Not not edit
+// Generated file. Do not edit
 #include <cstdint>
 #include <string>
 #include <cstring>

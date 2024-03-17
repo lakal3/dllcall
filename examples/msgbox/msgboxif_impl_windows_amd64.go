@@ -1,6 +1,6 @@
 package main
 
-// Generated file. Not not edit
+// Generated file. Do not edit
 
 import "syscall"
 import "unsafe"
@@ -30,7 +30,7 @@ func load_msgboxif(dllPath string) (err error) {
 		return fmt.Errorf("GetCRC: %v", err)
 	}
 	var crc uint64
-	syscall.SyscallN(getcrc, uintptr(unsafe.Pointer(&crc)))
+	_, _, _ = syscall.SyscallN(getcrc, uintptr(unsafe.Pointer(&crc)))
 	if crc != 0x63a150b21b59a5fc {
 		return fmt.Errorf("CRC mismatch %s != %x. DLL is not from same build than go code.", "0x63a150b21b59a5fc", crc)
 	}
@@ -41,9 +41,9 @@ func load_msgboxif(dllPath string) (err error) {
 	return nil
 }
 
-func msgboxif_getError(rc uintptr) error {
+func msgboxif_getError(rc uintptr) (err error) {
 	errText := make([]byte, 0, 512)
-	syscall.SyscallN(_msgboxif_gate__getError, rc, uintptr(unsafe.Pointer(&errText)))
+	_, _, _ = syscall.SyscallN(_msgboxif_gate__getError, rc, uintptr(unsafe.Pointer(&errText)))
 	return errors.New(string(errText))
 }
 

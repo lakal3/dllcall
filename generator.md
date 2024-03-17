@@ -13,7 +13,7 @@ Everything below the first #c line will be copied into the C++ interface (.h-fil
 Currently only `#ctype`, `#cmethod` and `#csafe_method` are supported. If any other comment is found, lines starting with #c generator will raise an error and abort generation.
 
 ### \#cmethod method_name
-\#cmethod will define method name for the interface. Only struct types may define methods.
+#cmethod will define method name for the interface. Only struct types may define methods.
 
 Interface generator will generate named method for each \#cmethod definition. 
 Their methods can be called like any standard Go methods.
@@ -25,7 +25,7 @@ Interface will have no separation for input or output values. We just pass a poi
 
 ### \#ctype alias_definition
 
-\#ctype will define the type alias that we use in C++ for the given Go type. Typically we define some uintptr 
+#ctype will define the type alias that we use in C++ for the given Go type. Typically we define some uintptr 
 and use a real pointer type as alias in C++. For example:
 
 ```go

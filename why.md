@@ -6,14 +6,14 @@ Go already supports embedding C/C++ code using CGO. So why is CGO not always sui
 
 CGO has some challenges, especially in Windows
 
-1\. CGO assumes GNU compatible compiler with archive file support
+#### 1. CGO assumes GNU compatible compiler with archive file support
  
 You cannot switch to a compiler that does not generate and consume unix style archive files. LIB files are standard on Windows.
 Even newer CLANG compilers on Windows will consume and produce LIB files.
 
-2\. CGO slows down Go compilation
+#### 2. CGO slows down Go compilation
 
-3\. Difficult binary distribution of C/C++ part
+#### 3. Difficult binary distribution of C/C++ part
  
  Typically C/C++ interfaced module is an existing project that is updated very seldom.
  With shared libraries you can precompile C/C++ module and distribute it in binary format. 
@@ -21,12 +21,12 @@ Even newer CLANG compilers on Windows will consume and produce LIB files.
  
  By default, Windows does not have any C/C++ compilers installed and if it has, 
  it is most likely a Microsoft C/C++ compiler which currently can't be used for CGO programs.
- 
- 4\. Debugging tools
+
+#### 4. Debugging tools
  
  Best Windows debuggers use PDB debug format. CGO toolchain cannot produce PDB files for debugging in Windows.
- 
- 5\. Platform specific extensions
+
+#### 5. Platform specific extensions
  
  For example MSVC supports some non standard extensions like importing typelibraries to use with COM+ DLLs. 
  This can't be done with GNU compiler. 
@@ -53,11 +53,6 @@ Even newer CLANG compilers on Windows will consume and produce LIB files.
  *There is no pure Go dlopen/dlsym implementation
  that I am aware of. See issue golang/go#18296 for more discussion about this.*
  
- In addition, if we invoke loaded APIs through CGO, it will detect that we
- have pointers to Go heap and will panic. **You can and must disable this check by setting environment variable GODEBUG=cgocheck=0** 
- 
- Generally it is advisable not to send a pointer to Go-heap into C/C++ libraries as they are not aware of Go's garbage collector.
- In this case the interface code is aware of calling the environment so passing Go slices and strings should be ok.
  
  Even when CGO is used to load libraries we can keep certain benefits such as:
  - Ability to choose compiler (Clang) for shared library compilation

@@ -1,5 +1,5 @@
 
-// Generated file. Not not edit
+// Generated file. Do not edit
 #include <cstdint>
 #include <string>
 #include <cstring>

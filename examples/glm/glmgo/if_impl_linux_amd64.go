@@ -1,7 +1,6 @@
-//
 package main
 
-// Generated file. Not not edit
+// Generated file. Do not edit
 
 import "github.com/lakal3/dllcall/linux/syscall"
 import "unsafe"
@@ -21,6 +20,10 @@ func load_if(dllPath string) (err error) {
 	if _if_gate__getError != 0 {
 		return nil
 	}
+	err = syscall.DisableCgocheck()
+	if err != nil {
+		return err
+	}
 	dll, err := syscall.LoadLibrary(dllPath)
 	if err != nil {
 		return err
@@ -39,7 +42,7 @@ func load_if(dllPath string) (err error) {
 		return fmt.Errorf("GetCRC: %v", err)
 	}
 	var crc uint64
-	syscall.Syscall(getcrc, 1, uintptr(unsafe.Pointer(&crc)), 0, 0)
+	syscall.SyscallN(getcrc, uintptr(unsafe.Pointer(&crc)))
 	if crc != 0xfad9b164355a2f76 {
 		return fmt.Errorf("CRC mismatch %s != %x. DLL is not from same build than go code.", "0xfad9b164355a2f76", crc)
 	}
@@ -52,13 +55,12 @@ func load_if(dllPath string) (err error) {
 
 func if_getError(rc uintptr) error {
 	errText := make([]byte, 0, 512)
-	syscall.Syscall(_if_gate__getError, 2, rc, uintptr(unsafe.Pointer(&errText)), 0)
+	syscall.SyscallN(_if_gate__getError, rc, uintptr(unsafe.Pointer(&errText)))
 	return errors.New(string(errText))
 }
 
 func (r *MultiplyVectors) Multiply() (err error) {
-	rc := syscall.SyscallL(_if_gate_MultiplyVectors_Multiply, 2, uintptr(unsafe.Pointer(r)),
-		uintptr(152), 0)
+	rc, _, _ := syscall.SyscallN(_if_gate_MultiplyVectors_Multiply, uintptr(unsafe.Pointer(r)), uintptr(152))
 	if rc != 0 {
 		return if_getError(rc)
 	}
