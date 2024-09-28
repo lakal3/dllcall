@@ -270,13 +270,7 @@ func __linuxLoader() {
 	fmt.Fprintln(fgo, "func load_{{ .ModuleName }}(dllPath string)(err error) {")
 	fmt.Fprintln(fgo, "    if _{{ $.ModuleName }}_gate__getError != 0 {")
 	fmt.Fprintln(fgo, "        return nil")
-	fmt.Fprintln(fgo, "    }")
-	{{ if not .Pin }}
-	fmt.Fprintln(fgo, "    err = syscall.DisableCgocheck()")
-	fmt.Fprintln(fgo, "	   if err != nil {")
-	fmt.Fprintln(fgo, "        return err")
-	fmt.Fprintln(fgo, "    }")
-	{{ end }}
+	fmt.Fprintln(fgo, "    }")	
 	fmt.Fprintln(fgo, "    dll, err := syscall.LoadLibrary(dllPath)")
 	fmt.Fprintln(fgo, "	   if err != nil {")
 	fmt.Fprintln(fgo, "        return err")

@@ -6,6 +6,7 @@ import "github.com/lakal3/dllcall/linux/syscall"
 import "unsafe"
 import "errors"
 import "fmt"
+import "runtime"
 
 var (
 	_dbif_gate__getError  uintptr
@@ -17,10 +18,6 @@ var (
 func load_dbif(dllPath string) (err error) {
 	if _dbif_gate__getError != 0 {
 		return nil
-	}
-	err = syscall.DisableCgocheck()
-	if err != nil {
-		return err
 	}
 	dll, err := syscall.LoadLibrary(dllPath)
 	if err != nil {
@@ -62,6 +59,9 @@ func dbif_getError(rc uintptr) error {
 }
 
 func (r *dbIf) Open() (err error) {
+	var p runtime.Pinner
+	defer p.Unpin()
+	p.Pin(unsafe.StringData(r.dbName))
 	rc, _, _ := syscall.SyscallN(_dbif_gate_dbIf_Open, uintptr(unsafe.Pointer(r)), uintptr(24))
 	if rc != 0 {
 		return dbif_getError(rc)
@@ -70,6 +70,9 @@ func (r *dbIf) Open() (err error) {
 }
 
 func (r *dbIf) Close() (err error) {
+	var p runtime.Pinner
+	defer p.Unpin()
+	p.Pin(unsafe.StringData(r.dbName))
 	rc, _, _ := syscall.SyscallN(_dbif_gate_dbIf_Close, uintptr(unsafe.Pointer(r)), uintptr(24))
 	if rc != 0 {
 		return dbif_getError(rc)
@@ -78,6 +81,9 @@ func (r *dbIf) Close() (err error) {
 }
 
 func (r *dbBatch) Do() (err error) {
+	var p runtime.Pinner
+	defer p.Unpin()
+	p.Pin(unsafe.SliceData(r.operations))
 	rc, _, _ := syscall.SyscallN(_dbif_gate_dbBatch_Do, uintptr(unsafe.Pointer(r)), uintptr(24))
 	if rc != 0 {
 		return dbif_getError(rc)

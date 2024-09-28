@@ -12,14 +12,22 @@ GoError *calcFibonacci::calc() {
 	if (n < 1) {
 		return new GoError("N must be >= 1");
 	}
-	*result = fibon(n);
+	result = fibon(n);
 	return nullptr;
 }
 
-GoError *calcFibonacci::fastCalc() {
+GoError * fastcalcFibonacci::fastCalc() {
 	if (n < 1) {
 		return new GoError("N must be >= 1");
 	}
 	*result = fibon(n);
+	return nullptr;
+}
+
+GoError* calcFibonExtra::calc() {
+	if (n < 1) {
+		return new GoError("N must be >= 1");
+	}
+	result = fibon(n);
 	return nullptr;
 }

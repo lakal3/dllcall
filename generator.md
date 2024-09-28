@@ -60,7 +60,7 @@ Anything after #c definitions will be copied to the C++ interface.
 
 ### \#csafe_method method_name (Experimental)
 
-\#csafe_method works like method unless you also specify -fast option when running dllcall.
+#csafe_method works like method unless you also specify -fast option when running dllcall.
 With fast options, dllcall will generate Go assembly file that will invoke method direcly, bypassing 
 normal Go Syscall / CGO overhead. 
 
@@ -70,13 +70,14 @@ In most cases overhead is not relevant.
 
 To mark method as a safe_method it:
 - MUST NOT use stack more that 63k. Exceeding this limit will crash your program!
-- SHOULD NOT use any IO
+- SHOULD NOT use any IO. If you use any IO, call overhead of standard call is negliable vs time spent in IO calls.
 - SHOULD NOT last over 1ms. Use normal call if in any doubt 
 - CAN NOT return result(s) in structure variables. You may still use pointer to return values
+- Fastcall can also break between Go version. If was broken in 1.21 and in 1.22 (Linux). It seems to work again in 1.23 
 as long as you are sure that these points to heap and not stack!
 
 *In order to support Go assembler in fastcall interfaces, Linux DLL loader was moved to separate package linux/syscall. 
-Go´s inbuilt assembler wont work if package has any CGO code. See issue [19948](https://github.com/golang/go/issues/19448) for details.*
+Go´s inbuilt assembler won't work if package has any CGO code. See issue [19948](https://github.com/golang/go/issues/19448) for details.*
  
 This syscall library has similar methods to load and invoke functions from shared libraries that
 already exists on Go´s standard syscall library on Windows.  
@@ -91,7 +92,7 @@ use that information to generate actual C++ interface file.
 
 Generator temporary Go file will be deleted after generation process. You can use -keep flag to preserve generator temporary go file. 
  
-Currently generator supports following types that have well defined counterparts on C++ side.
+Currently, generator supports following types that have well defined counterparts on C++ side.
 - Any size of int and uint types (uint8, int8, uint16, int16, ...). 
 They will be mapped to C++ equivalents (uint8_t, int8_t, ...)
 - float32 and float64
@@ -102,11 +103,21 @@ They will be mapped to C++ equivalents (uint8_t, int8_t, ...)
 - Structures containing supported types
 
 Due to the copying of {interface}.go file, all types defined in this module that are used in interface types
-must be defined in interface file. Otherwise generator will not find type definitions.
+must be defined in interface file. Otherwise, generator will not find type definitions.
  
-Unsupported types include for example maps and channels.
+Unsupported types are for example maps and channels.
 
- 
+Using parametric polymorphism (generics) in type definitions might work in some cases, but it is not supported.
+
+## Pinning
+
+Pinning will use new runtime.Pinner to pin all pointers, slices and strings in interface structure. Pinning will now
+happend only on top level member. If for example pointer to struct contains another pointer it will not be pinned.
+
+If Go ever changes its garbage collector to moving one, then pinning must be done on all levels. Currently dllcall only tries to pin entities that default cgoheck will check.
+For same reason, Window generator will currently not emit Pin calls.
+
+
 ## Generated C++ code
 
 For example, if we have definition:

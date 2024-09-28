@@ -97,36 +97,35 @@ There are three ways to suppress this check
 In version 1.21 Go introduced new Pin mechanism that allows marking all pointer that we want to use in calls to C++ program so
 that Gos garbage collector is aware of them. 
 
-You can enable generating pinned memory pointer with -pin flag. 
+You can enable generating pinned memory pointer with -pin flag. **You should use -pin option if you have go1.21 or later. 
+It is safe and supported**
 
-Pinning is a standard way to handle pointers to Go memory, but unfortunately it add some overhead to calls. Hello Example uses this method.
+Pinning incurs some overhead that is usually negliable. You can use fibon example to check differences between pinned, non pinned and fastcall
 
-### Disable cgocheck with code
 
-Dllcall uses hack to turn off cgocheck. This hack is in function DisableCgocheck. 
-Generated code will call this function when loading .dll/.so file.
+### Disable cgocheck environment variable
 
-If you select -pin option, cgocheck is not disabled because it will allow pinned memory pointers without panic. 
-Pin option is available only in go 1.21 and later.
+Set environment variable GODEBUG to 'CGOCHECK=0'. 
 
-It is possible this hack will not work in some future version of Go, so you can change this function
-to disable this hack. 
+It seems that there is no way to set this setting using godebug directive nor godebug settings in .mod file.
 
 ### Windows
 
 Actually Windows syscalls don't apply any checks for go pointers, so dllcall generator will
-not emit any code to disable checks of to pin memory even if -pin flag is given
+not emit any to pin memory even if -pin flag is given
 
 
 ## Safe method (experimental)
 
-*In go 1.21.1 safemethod calls will fail because they set new value to SP (Stack pointer). 
-This is due to change in go1.21. It has been fixed in go1.22 for Windows but Linux still*
-
-Added new experimental \#csafe_method that mostly allows bypassing Go call overhead to native libraries.
+Added new experimental #csafe_method that mostly allows bypassing Go call overhead to native libraries.
 This method has several limitations and is experimental. See [Generator](generator.md) and new sample fibon for more details.
 
 You should only use fast call when absolutely necessary like accessing high resolution timer in Windows. 
+
+
+*In go 1.21.1 safemethod calls will fail because they set new value to SP (Stack pointer).
+This is due to change in go1.21. It has been fixed in go1.22 for Windows but Linux still.
+It seems to work in go1.23 for both operating systems*
 
 # Status
 

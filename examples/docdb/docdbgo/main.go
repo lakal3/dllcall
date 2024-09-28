@@ -1,6 +1,6 @@
 //
 
-//go:generate dllcall dbif.go ../docdbcpp/dbif.h
+//go:generate dllcall -pin dbif.go ../docdbcpp/dbif.h
 package main
 
 import "log"

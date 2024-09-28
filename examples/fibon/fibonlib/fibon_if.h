@@ -45,10 +45,23 @@ struct GoError {
 
 typedef   struct calcFibonacci {
     int64_t n;
-    int64_t * result;
+    int64_t result;
     GoError *calc();
-    GoError *fastCalc();
 } calcFibonacci ;
+typedef   struct fastcalcFibonacci {
+    int64_t n;
+    int64_t * result;
+    GoError *fastCalc();
+} fastcalcFibonacci ;
+typedef   struct extraData {
+    GoString extras;
+} extraData ;
+typedef   struct calcFibonExtra {
+    int64_t n;
+    int64_t result;
+    extraData * extra;
+    GoError *calc();
+} calcFibonExtra ;
 #ifndef DLL_EXPORT
 #ifdef _WIN32
 #define DLL_EXPORT  __declspec(dllexport) 
@@ -62,7 +75,8 @@ extern "C" {
 DLL_EXPORT void DLLCALL_SYSCALL GetError(GoError *err, GoSlice<char> *errBuf);
 DLL_EXPORT void DLLCALL_SYSCALL GetCRC(uint64_t *crc);
 DLL_EXPORT GoError * DLLCALL_SYSCALL calcFibonacci_calc(calcFibonacci *arg, int64_t argLen );
-DLL_EXPORT GoError * DLLCALL_SYSCALL calcFibonacci_fastCalc(calcFibonacci *arg, int64_t argLen );
+DLL_EXPORT GoError * DLLCALL_SYSCALL calcFibonExtra_calc(calcFibonExtra *arg, int64_t argLen );
+DLL_EXPORT GoError * DLLCALL_SYSCALL fastcalcFibonacci_fastCalc(fastcalcFibonacci *arg, int64_t argLen );
 }
 #ifndef DLLCALL_NO_IMPL
 const char *_callError = "Argument length check failed. Recompile interface and check compiler alignments";
@@ -72,8 +86,14 @@ GoError *calcFibonacci_calc(calcFibonacci *arg, int64_t argLen ) {
     err = arg->calc();
     return err;
 }
-GoError *calcFibonacci_fastCalc(calcFibonacci *arg, int64_t argLen ) {
-    if (sizeof(calcFibonacci) != argLen) { return new GoError(_callError); }
+GoError *calcFibonExtra_calc(calcFibonExtra *arg, int64_t argLen ) {
+    if (sizeof(calcFibonExtra) != argLen) { return new GoError(_callError); }
+    GoError *err;
+    err = arg->calc();
+    return err;
+}
+GoError *fastcalcFibonacci_fastCalc(fastcalcFibonacci *arg, int64_t argLen ) {
+    if (sizeof(fastcalcFibonacci) != argLen) { return new GoError(_callError); }
     GoError *err;
     err = arg->fastCalc();
     return err;
@@ -84,6 +104,6 @@ void GetError(GoError *err, GoSlice<char> *errBuf) {
 }
 
 void GetCRC(uint64_t *crc) {
-    *crc = 0x6db41bbc5ed789f1ull;
+    *crc = 0x5e75718279b74397ull;
 }
 #endif
