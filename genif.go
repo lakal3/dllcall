@@ -18,7 +18,7 @@ func generate(gofile, cfile string) error {
 	tmpName := ffSlash(cfile) + "_temp.go"
 	dt := &genData{
 		GoTargetFile: ffSlash(gofile), TargetFile: ffSlash(cfile), Header: header, PackageName: packageName, CRC: crc,
-		Pin: fPin,
+		Pin: false,
 	}
 	tmp := filepath.Base(gofile)
 	dt.ModuleName = tmp[0 : len(tmp)-5] // _impl.go removed
@@ -117,6 +117,8 @@ type genData struct {
 	Methods      []genMethod
 	SafeMethods  []genMethod
 	CRC          string
+	// Pin will generate code to pin references strings, slices and pointer. This code is currently not need but
+	// retained for possible future needs
 	Pin          bool
 	BuildLinux   bool
 	BuildWindows bool

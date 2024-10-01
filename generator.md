@@ -109,14 +109,6 @@ Unsupported types are for example maps and channels.
 
 Using parametric polymorphism (generics) in type definitions might work in some cases, but it is not supported.
 
-## Pinning
-
-Pinning will use new runtime.Pinner to pin all pointers, slices and strings in interface structure. Pinning will now
-happend only on top level member. If for example pointer to struct contains another pointer it will not be pinned.
-
-If Go ever changes its garbage collector to moving one, then pinning must be done on all levels. Currently dllcall only tries to pin entities that default cgoheck will check.
-For same reason, Window generator will currently not emit Pin calls.
-
 
 ## Generated C++ code
 

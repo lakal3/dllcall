@@ -9,7 +9,6 @@ import (
 
 var fKeep bool
 var fFastcall bool
-var fPin bool
 var fLinux bool
 var fWindows bool
 
@@ -20,7 +19,6 @@ func main() {
 	}
 	flag.BoolVar(&fKeep, "keep", false, "Keep temp generator file")
 	flag.BoolVar(&fFastcall, "fast", false, "Use fastcall for csafe_method(s)")
-	flag.BoolVar(&fPin, "pin", false, "Pin memory for inner pointers. This feature required go1.21")
 	flag.BoolVar(&fLinux, "linux", false, "Build only Linux interface")
 	flag.BoolVar(&fWindows, "win", false, "Build only Windows interface")
 	flag.Parse()
@@ -41,7 +39,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Println("dllcall v0.11.1")
+	fmt.Println("dllcall v0.12.1")
 	fmt.Println("Usage: dllcall [flags] go_file cpp_file")
 	os.Exit(1)
 }

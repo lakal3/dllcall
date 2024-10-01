@@ -5,11 +5,13 @@ DLLCall is an interface generator.
 DLLCall will use a single go file as an interface description and
 from that file it will generate wrappers to call DLL implementing the same interface.
 
-See [why DLLCall](why.md) for comparision between CGO and DLLCall interfaces.
+See [why DLLCall](why.md) for comparison between CGO and DLLCall interfaces.
 
 ## Using DLLCall
 
-Install DLLCall tool using `go install github.com/lakal3/dllcall`
+Install DLLCall tool using `go install github.com/lakal3/dllcall`. 
+
+You must have at least Go 1.18 to use DLLCall
 
 Invoke:  `dllcall {interface}.go {c++ interface}.h`
 
@@ -88,31 +90,11 @@ or examples.
 ## Cgocheck
 
 Go 1.16 introduced new check that prevents pointers structures that contains pointer to Go memory.
-But in dllcall library all code must be aware of Go garbage collector and do not retain any references
-to structure member after call has been completed, so this check is unnecessary.
+Dllcall will bypass cgocheck, because generated interface code don't have full type information to support this.
 
-There are three ways to suppress this check
+When using dllcall all code must be aware of Go garbage collector and do not retain any references
+to structure member in C++ side after call has been completed. If you want to keep go allocated heap elements in C++ code you can use new runtime.Pinner available from Go 1.21.
 
-### Pinned memory
-In version 1.21 Go introduced new Pin mechanism that allows marking all pointer that we want to use in calls to C++ program so
-that Gos garbage collector is aware of them. 
-
-You can enable generating pinned memory pointer with -pin flag. **You should use -pin option if you have go1.21 or later. 
-It is safe and supported**
-
-Pinning incurs some overhead that is usually negliable. You can use fibon example to check differences between pinned, non pinned and fastcall
-
-
-### Disable cgocheck environment variable
-
-Set environment variable GODEBUG to 'CGOCHECK=0'. 
-
-It seems that there is no way to set this setting using godebug directive nor godebug settings in .mod file.
-
-### Windows
-
-Actually Windows syscalls don't apply any checks for go pointers, so dllcall generator will
-not emit any to pin memory even if -pin flag is given
 
 
 ## Safe method (experimental)
@@ -140,10 +122,10 @@ To fix this, remove old generated files from project.
    
 
 ## TODO?
-- [x] Pinned memory available with Go 1.21
 - [x] Fastcall (Experimental)
 - [ ] Better support for types imported from other modules
 - [x] Linux support 
+- [ ] Pin example
 
 
 

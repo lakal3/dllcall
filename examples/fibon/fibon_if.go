@@ -19,12 +19,3 @@ type fastcalcFibonacci struct {
 type extraData struct {
 	extras string
 }
-
-/*
-#cmethod calc
-*/
-type calcFibonExtra struct {
-	n      int64
-	result int64
-	extra  *extraData
-}

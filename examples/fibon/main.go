@@ -1,6 +1,6 @@
 // Fibonacci example to measure performance between different calls
 
-//go:generate dllcall -fast -pin fibon_if.go fibonlib/fibon_if.h
+//go:generate dllcall -fast fibon_if.go fibonlib/fibon_if.h
 package main
 
 import (
@@ -39,8 +39,7 @@ func main() {
 	switch strings.ToLower(flag.Arg(0)) {
 	case "go":
 		fn = goFibon
-	case "pinned":
-		fn = pinnedFibon
+
 	case "syscall":
 		fn = stdFibon
 	case "fastcall":
@@ -90,16 +89,6 @@ func fastFibon(n int64) (int64, error) {
 
 var extra *extraData
 
-func pinnedFibon(n int64) (int64, error) {
-	cl := &calcFibonExtra{n: n}
-	cl.extra = extra
-	err := cl.calc()
-	if err != nil {
-		return 0, err
-	}
-	return cl.result, nil
-}
-
 func fibon(n int64) int64 {
 	if n > 2 {
 		return fibon(n-1) + fibon(n-2)
@@ -112,7 +101,6 @@ func usage() {
 	fmt.Println("  value - Fibonacci to calculate")
 	fmt.Println("  count - Number of iterations (is set, total runtime will be shown)")
 	fmt.Println("  methods: go - go fibonacci")
-	fmt.Println("           pinned - c fibonacci using pinnen standard call")
 	fmt.Println("           syscall - c fibonacci using standard call")
 	fmt.Println("           fastcall - c fibonacci using fast call")
 	os.Exit(1)
