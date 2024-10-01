@@ -153,7 +153,7 @@ func __winLoader() {
 	fmt.Fprintln(fgo, "}")
 	fmt.Fprintln(fgo, "")
 	fmt.Fprintln(fgo, "func {{ $.ModuleName }}_getError(rc uintptr)(err error) {")
-	fmt.Fprintln(fgo, "    errText := make([]byte, 0, 512)")
+	fmt.Fprintln(fgo, "    errText := make([]byte, 0, 4096)")
 	fmt.Fprintln(fgo, "    _, _, _ = syscall.SyscallN(_{{ $.ModuleName }}_gate__getError, rc, uintptr(unsafe.Pointer(&errText)))")
 	fmt.Fprintln(fgo, "    return errors.New(string(errText))")
 	fmt.Fprintln(fgo, "}")
@@ -245,11 +245,13 @@ func __linuxLoader() {
 	fmt.Fprintln(fgo, "// Generated file. Do not edit")
 	fmt.Fprintln(fgo, "")
 	fmt.Fprintln(fgo, "import \"github.com/lakal3/dllcall/linux/syscall\"")
-	fmt.Fprintln(fgo, "import \"unsafe\"")
 	fmt.Fprintln(fgo, "import \"errors\"")
 	fmt.Fprintln(fgo, "import \"fmt\"")
 	{{ if .Pin }}
 	fmt.Fprintln(fgo, "import \"runtime\"")
+	{{ end }}
+	{{ if or .Pin .SafeMethods }}
+	fmt.Fprintln(fgo, "import \"unsafe\"")
 	{{ end }}
 	fmt.Fprintln(fgo, "")
 	fmt.Fprintln(fgo, "var (")
@@ -293,7 +295,7 @@ func __linuxLoader() {
 	fmt.Fprintln(fgo, "        return fmt.Errorf(\"GetCRC: %v\", err)")
 	fmt.Fprintln(fgo, "    }")
 	fmt.Fprintln(fgo, "    var crc uint64")
-	fmt.Fprintln(fgo, "    syscall.SyscallN(getcrc,uintptr(unsafe.Pointer(&crc)))")
+	fmt.Fprintln(fgo, "    syscall.GetCRC(getcrc,&crc)")
     fmt.Fprintln(fgo, "    if crc != {{ .CRC }} {")
     fmt.Fprintln(fgo, "        return fmt.Errorf(\"CRC mismatch %s != %x. DLL is not from same build than go code.\",\"{{ .CRC }}\", crc)")
     fmt.Fprintln(fgo, "    }")
@@ -305,21 +307,25 @@ func __linuxLoader() {
 	fmt.Fprintln(fgo, "}")
 	fmt.Fprintln(fgo, "")
 	fmt.Fprintln(fgo, "func {{ $.ModuleName }}_getError(rc uintptr)(error) {")
-	fmt.Fprintln(fgo, "    errText := make([]byte, 0, 512)")
-	fmt.Fprintln(fgo, "    syscall.SyscallN(_{{ $.ModuleName }}_gate__getError, rc, uintptr(unsafe.Pointer(&errText)))")
+	fmt.Fprintln(fgo, "    errText := make([]byte, 0, 4096)")
+{{ if .Pin }}
+	fmt.Fprintln(fgo, "    var p runtime.Pinner")
+	fmt.Fprintln(fgo, "    defer p.Unpin()")
+	fmt.Fprintln(fgo, "    p.Pin(unsafe.SliceData(errText))")
+	var tt reflect.Type
+{{ end }}
+	fmt.Fprintln(fgo, "    syscall.GetError(_{{ $.ModuleName }}_gate__getError, rc, &errText)")
 	fmt.Fprintln(fgo, "    return errors.New(string(errText))")
 	fmt.Fprintln(fgo, "}")
 	fmt.Fprintln(fgo, "")
 	{{ $pin := .Pin }}
-	var tt reflect.Type
 {{ range .Methods }}
 	fmt.Fprintln(fgo, "func (r *{{ .GoType}}) {{ .MethodName }}() (err error) {")
-	tt = reflect.TypeOf(new({{ .GoType}}))
 	{{ if $pin }}
+	tt = reflect.TypeOf(new({{ .GoType}}))
 	_emit_pin(fgo, tt)
 	{{ end }}
-	fmt.Fprint(fgo, "    rc, _, _ := syscall.SyscallN(_{{ $.ModuleName }}_gate_{{ .GoType}}_{{ .MethodName }}, uintptr(unsafe.Pointer(r)), ")
-    fmt.Fprintln(fgo, "      uintptr(", tt.Elem().Size(), "))")
+	fmt.Fprintln(fgo, "    rc := syscall.SyscallT(_{{ $.ModuleName }}_gate_{{ .GoType}}_{{ .MethodName }}, r)")
     fmt.Fprintln(fgo, "    if rc != 0 {")
     fmt.Fprintln(fgo, "         return {{ $.ModuleName }}_getError(rc)")
     fmt.Fprintln(fgo, "    }")

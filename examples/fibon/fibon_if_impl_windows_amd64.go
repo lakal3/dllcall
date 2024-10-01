@@ -54,7 +54,7 @@ func load_fibon_if(dllPath string) (err error) {
 }
 
 func fibon_if_getError(rc uintptr) (err error) {
-	errText := make([]byte, 0, 512)
+	errText := make([]byte, 0, 4096)
 	_, _, _ = syscall.SyscallN(_fibon_if_gate__getError, rc, uintptr(unsafe.Pointer(&errText)))
 	return errors.New(string(errText))
 }

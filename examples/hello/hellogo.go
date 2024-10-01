@@ -1,6 +1,6 @@
 // Simple hello using DLLCall
 
-//go:generate dllcall -pin helloif.go greeting/greeting.h
+//go:generate dllcall helloif.go greeting/greeting.h
 package main
 
 import (

@@ -42,7 +42,7 @@ func load_helloif(dllPath string) (err error) {
 }
 
 func helloif_getError(rc uintptr) (err error) {
-	errText := make([]byte, 0, 512)
+	errText := make([]byte, 0, 4096)
 	_, _, _ = syscall.SyscallN(_helloif_gate__getError, rc, uintptr(unsafe.Pointer(&errText)))
 	return errors.New(string(errText))
 }

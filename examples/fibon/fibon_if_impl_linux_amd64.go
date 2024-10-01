@@ -3,10 +3,10 @@ package main
 // Generated file. Do not edit
 
 import "github.com/lakal3/dllcall/linux/syscall"
-import "unsafe"
 import "errors"
 import "fmt"
 import "runtime"
+import "unsafe"
 
 var (
 	_fibon_if_gate__getError                  uintptr
@@ -44,7 +44,7 @@ func load_fibon_if(dllPath string) (err error) {
 		return fmt.Errorf("GetCRC: %v", err)
 	}
 	var crc uint64
-	syscall.SyscallN(getcrc, uintptr(unsafe.Pointer(&crc)))
+	syscall.GetCRC(getcrc, &crc)
 	if crc != 0x5e75718279b74397 {
 		return fmt.Errorf("CRC mismatch %s != %x. DLL is not from same build than go code.", "0x5e75718279b74397", crc)
 	}
@@ -56,13 +56,16 @@ func load_fibon_if(dllPath string) (err error) {
 }
 
 func fibon_if_getError(rc uintptr) error {
-	errText := make([]byte, 0, 512)
-	syscall.SyscallN(_fibon_if_gate__getError, rc, uintptr(unsafe.Pointer(&errText)))
+	errText := make([]byte, 0, 4096)
+	var p runtime.Pinner
+	defer p.Unpin()
+	p.Pin(unsafe.SliceData(errText))
+	syscall.GetError(_fibon_if_gate__getError, rc, &errText)
 	return errors.New(string(errText))
 }
 
 func (r *calcFibonacci) calc() (err error) {
-	rc, _, _ := syscall.SyscallN(_fibon_if_gate_calcFibonacci_calc, uintptr(unsafe.Pointer(r)), uintptr(16))
+	rc := syscall.SyscallT(_fibon_if_gate_calcFibonacci_calc, r)
 	if rc != 0 {
 		return fibon_if_getError(rc)
 	}
@@ -73,7 +76,7 @@ func (r *calcFibonExtra) calc() (err error) {
 	var p runtime.Pinner
 	defer p.Unpin()
 	p.Pin(r.extra)
-	rc, _, _ := syscall.SyscallN(_fibon_if_gate_calcFibonExtra_calc, uintptr(unsafe.Pointer(r)), uintptr(24))
+	rc := syscall.SyscallT(_fibon_if_gate_calcFibonExtra_calc, r)
 	if rc != 0 {
 		return fibon_if_getError(rc)
 	}
