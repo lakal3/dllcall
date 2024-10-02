@@ -111,15 +111,10 @@ It seems to work in go1.23 for both operating systems*
 
 # Status
 
+Dllcall is very near release version 1.0. If 0.12.1 don't have any issues it will promoted to version 1.0.0.
+
 Currently only 64 bit (amd64) Windows and 64 bit Linux (amd64) are supported. 
-
-
-**Version 0.8.2 breaking changes**
-- Renamed generated Go interface. Generated files have now _amd64 extension to prevent build on other architectures. 
-To fix this, remove old generated files from project.
-- Linux CGO wrapper has been moved to a new package linux/syscall to support fastcall. Wrapper packages must be compiled without CGO.
-
-   
+ 
 
 ## TODO?
 - [x] Fastcall (Experimental)
